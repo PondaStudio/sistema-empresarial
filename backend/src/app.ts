@@ -30,8 +30,17 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'backend' })
 })
 
-// Routes se registran aquí conforme se construyen las waves
-// import authRoutes from './routes/auth'
-// app.use('/auth', authRoutes)
+// Wave 1 routes
+import authRoutes       from './routes/auth'
+import usersRoutes      from './routes/users'
+import sucursalesRoutes from './routes/sucursales'
+import permisosRoutes   from './routes/permisos'
+import rolesRoutes      from './routes/roles'
+
+app.use('/auth',        authRoutes)
+app.use('/users',       usersRoutes)
+app.use('/sucursales',  sucursalesRoutes)
+app.use('/permisos',    permisosRoutes)
+app.use('/roles',       rolesRoutes)
 
 export default app
