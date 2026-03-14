@@ -1,0 +1,14 @@
+{
+  "active": false,
+  "current_phase": "completed",
+  "rounds": "4",
+  "final_ambiguity": "0.139",
+  "spec_path": ".omc/specs/deep-interview-sistema-empresarial.md",
+  "status": "PASSED",
+  "_meta": {
+    "mode": "deep-interview",
+    "sessionId": "sistema-empresarial-001",
+    "updatedAt": "2026-03-14T21:31:30.145Z",
+    "updatedBy": "state_write_tool"
+  }
+}
