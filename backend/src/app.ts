@@ -52,4 +52,11 @@ app.use('/productos',   productosRoutes)
 app.use('/inventario',  inventarioRoutes)
 app.use('/proveedores', proveedoresRoutes)
 
+// Wave 3 routes
+import pedidosVentaRoutes from './routes/pedidosVenta'
+import clientesRoutes     from './routes/clientes'
+
+app.use('/pedidos/venta', pedidosVentaRoutes)
+app.use('/clientes',      clientesRoutes)
+
 export default app
