@@ -34,9 +34,12 @@ async def health():
     return {"status": "ok", "service": "analysis"}
 
 
-# Routers se registran aquí conforme se construyen las waves
-# from app.routers import analysis, ocr, ai_hiring, scraping
-# app.include_router(analysis.router, prefix="/analysis", tags=["analysis"])
+# Wave 2 routers
+from app.routers import cedis
+app.include_router(cedis.router, prefix="/analysis", tags=["analysis"])
+
+# Future waves (uncomment as built):
+# from app.routers import ocr, ai_hiring, scraping
 # app.include_router(ocr.router, prefix="/ocr", tags=["ocr"])
 # app.include_router(ai_hiring.router, prefix="/ai", tags=["ai"])
 # app.include_router(scraping.router, prefix="/scraping", tags=["scraping"])

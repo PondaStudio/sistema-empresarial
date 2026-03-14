@@ -3,10 +3,12 @@ import { Toaster } from 'react-hot-toast'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 
 // Wave 1 pages
-import LoginPage    from './pages/auth/LoginPage'
-import PerfilPage   from './pages/perfil/PerfilPage'
-import UsuariosPage from './pages/admin/UsuariosPage'
-import PermisosPage from './pages/admin/PermisosPage'
+import LoginPage      from './pages/auth/LoginPage'
+import PerfilPage     from './pages/perfil/PerfilPage'
+import UsuariosPage   from './pages/admin/UsuariosPage'
+import PermisosPage   from './pages/admin/PermisosPage'
+// Wave 2 pages
+import InventarioPage from './pages/inventario/InventarioPage'
 
 function App() {
   return (
@@ -20,7 +22,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/perfil"          element={<PerfilPage />} />
           <Route path="/admin/usuarios"  element={<UsuariosPage />} />
-          <Route path="/admin/permisos"  element={<PermisosPage />} />
+          <Route path="/admin/permisos"   element={<PermisosPage />} />
+          <Route path="/inventario"      element={<InventarioPage />} />
 
           {/* Dashboard placeholder — Wave 5 */}
           <Route path="/dashboard" element={

@@ -43,4 +43,13 @@ app.use('/sucursales',  sucursalesRoutes)
 app.use('/permisos',    permisosRoutes)
 app.use('/roles',       rolesRoutes)
 
+// Wave 2 routes
+import productosRoutes   from './routes/productos'
+import inventarioRoutes  from './routes/inventario'
+import proveedoresRoutes from './routes/proveedores'
+
+app.use('/productos',   productosRoutes)
+app.use('/inventario',  inventarioRoutes)
+app.use('/proveedores', proveedoresRoutes)
+
 export default app
