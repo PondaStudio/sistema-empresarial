@@ -12,6 +12,8 @@ import PermisosPage   from './pages/admin/PermisosPage'
 import InventarioPage    from './pages/inventario/InventarioPage'
 // Wave 3 pages
 import PedidosVentaPage  from './pages/pedidos/PedidosVentaPage'
+import ClientesPage      from './pages/clientes/ClientesPage'
+import ProveedoresPage   from './pages/proveedores/ProveedoresPage'
 // Wave 4 pages
 import TareasPage        from './pages/tareas/TareasPage'
 import ComunicacionPage  from './pages/comunicacion/ComunicacionPage'
@@ -38,6 +40,8 @@ function App() {
             <Route path="/admin/permisos"   element={<PermisosPage />} />
             <Route path="/inventario"       element={<InventarioPage />} />
             <Route path="/pedidos/venta"    element={<PedidosVentaPage />} />
+            <Route path="/clientes"         element={<ClientesPage />} />
+            <Route path="/proveedores"      element={<ProveedoresPage />} />
             <Route path="/tareas"           element={<TareasPage />} />
             <Route path="/comunicacion"     element={<ComunicacionPage />} />
             <Route path="/rrhh"             element={<RrhhPage />} />
