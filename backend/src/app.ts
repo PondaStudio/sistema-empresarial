@@ -79,4 +79,13 @@ app.use('/avisos',         avisosRoutes)
 app.use('/notificaciones', notificacionesRoutes)
 app.use('/bitacora',       bitacoraRoutes)
 
+// Wave 5b routes
+import capacitacionesRoutes from './routes/capacitaciones'
+import evaluacionesRoutes   from './routes/evaluaciones'
+import formatosRoutes       from './routes/formatos'
+
+app.use('/capacitaciones', capacitacionesRoutes)
+app.use('/evaluaciones',   evaluacionesRoutes)
+app.use('/formatos',       formatosRoutes)
+
 export default app

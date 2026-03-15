@@ -19,9 +19,12 @@ import TareasPage        from './pages/tareas/TareasPage'
 import ComunicacionPage  from './pages/comunicacion/ComunicacionPage'
 import RrhhPage          from './pages/rrhh/RrhhPage'
 // Wave 5 pages
-import DashboardPage     from './pages/dashboard/DashboardPage'
-import AvisosPage        from './pages/avisos/AvisosPage'
-import BitacoraPage      from './pages/bitacora/BitacoraPage'
+import DashboardPage      from './pages/dashboard/DashboardPage'
+import AvisosPage         from './pages/avisos/AvisosPage'
+import BitacoraPage       from './pages/bitacora/BitacoraPage'
+import CapacitacionesPage from './pages/capacitaciones/CapacitacionesPage'
+import EvaluacionesPage   from './pages/evaluaciones/EvaluacionesPage'
+import FormatosPage       from './pages/formatos/FormatosPage'
 
 function App() {
   return (
@@ -46,7 +49,10 @@ function App() {
             <Route path="/comunicacion"     element={<ComunicacionPage />} />
             <Route path="/rrhh"             element={<RrhhPage />} />
             <Route path="/avisos"           element={<AvisosPage />} />
-            <Route path="/bitacora"         element={<BitacoraPage />} />
+            <Route path="/bitacora"           element={<BitacoraPage />} />
+            <Route path="/capacitaciones"    element={<CapacitacionesPage />} />
+            <Route path="/evaluaciones"      element={<EvaluacionesPage />} />
+            <Route path="/formatos"          element={<FormatosPage />} />
 
             {/* Sin permiso */}
             <Route path="/sin-permiso" element={

@@ -19,6 +19,9 @@ const NAV: NavItem[] = [
   { path: '/avisos',         label: 'Avisos',         icon: '📢', modulo: 'avisos' },
   { path: '/rrhh',           label: 'RRHH',           icon: '👥', modulo: 'rrhh' },
   { path: '/bitacora',       label: 'Bitácora',       icon: '📋', modulo: 'bitacora' },
+  { path: '/capacitaciones', label: 'Capacitaciones', icon: '🎓', modulo: 'capacitaciones' },
+  { path: '/evaluaciones',   label: 'Evaluaciones',   icon: '⭐', modulo: 'evaluaciones' },
+  { path: '/formatos',       label: 'Formatos',       icon: '📂', modulo: 'formatos' },
 ]
 
 const ADMIN_NAV: NavItem[] = [
