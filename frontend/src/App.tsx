@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
+import { AppLayout } from './components/layout/AppLayout'
 
 // Wave 1 pages
 import LoginPage      from './pages/auth/LoginPage'
@@ -13,6 +14,12 @@ import InventarioPage    from './pages/inventario/InventarioPage'
 import PedidosVentaPage  from './pages/pedidos/PedidosVentaPage'
 // Wave 4 pages
 import TareasPage        from './pages/tareas/TareasPage'
+import ComunicacionPage  from './pages/comunicacion/ComunicacionPage'
+import RrhhPage          from './pages/rrhh/RrhhPage'
+// Wave 5 pages
+import DashboardPage     from './pages/dashboard/DashboardPage'
+import AvisosPage        from './pages/avisos/AvisosPage'
+import BitacoraPage      from './pages/bitacora/BitacoraPage'
 
 function App() {
   return (
@@ -24,28 +31,27 @@ function App() {
 
         {/* Protected — requiere autenticación */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/perfil"          element={<PerfilPage />} />
-          <Route path="/admin/usuarios"  element={<UsuariosPage />} />
-          <Route path="/admin/permisos"   element={<PermisosPage />} />
-          <Route path="/inventario"      element={<InventarioPage />} />
-          <Route path="/pedidos/venta"   element={<PedidosVentaPage />} />
-          <Route path="/tareas"          element={<TareasPage />} />
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard"        element={<DashboardPage />} />
+            <Route path="/perfil"           element={<PerfilPage />} />
+            <Route path="/admin/usuarios"   element={<UsuariosPage />} />
+            <Route path="/admin/permisos"   element={<PermisosPage />} />
+            <Route path="/inventario"       element={<InventarioPage />} />
+            <Route path="/pedidos/venta"    element={<PedidosVentaPage />} />
+            <Route path="/tareas"           element={<TareasPage />} />
+            <Route path="/comunicacion"     element={<ComunicacionPage />} />
+            <Route path="/rrhh"             element={<RrhhPage />} />
+            <Route path="/avisos"           element={<AvisosPage />} />
+            <Route path="/bitacora"         element={<BitacoraPage />} />
 
-          {/* Dashboard placeholder — Wave 5 */}
-          <Route path="/dashboard" element={
-            <div className="p-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-              <p className="text-gray-500 mt-2">En construcción (Wave 5)</p>
-            </div>
-          } />
-
-          {/* Sin permiso */}
-          <Route path="/sin-permiso" element={
-            <div className="p-8 text-center">
-              <h1 className="text-xl font-bold text-red-600">Sin permiso</h1>
-              <p className="text-gray-500 mt-2">No tienes acceso a esta sección.</p>
-            </div>
-          } />
+            {/* Sin permiso */}
+            <Route path="/sin-permiso" element={
+              <div className="p-8 text-center">
+                <h1 className="text-xl font-bold text-red-600">Sin permiso</h1>
+                <p className="text-gray-500 mt-2">No tienes acceso a esta sección.</p>
+              </div>
+            } />
+          </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -68,4 +68,15 @@ app.use('/comunicacion', comunicacionRoutes)
 app.use('/tareas',       tareasRoutes)
 app.use('/rrhh',         rrhhRoutes)
 
+// Wave 5 routes
+import dashboardRoutes      from './routes/dashboard'
+import avisosRoutes         from './routes/avisos'
+import notificacionesRoutes from './routes/notificaciones'
+import bitacoraRoutes       from './routes/bitacora'
+
+app.use('/dashboard',      dashboardRoutes)
+app.use('/avisos',         avisosRoutes)
+app.use('/notificaciones', notificacionesRoutes)
+app.use('/bitacora',       bitacoraRoutes)
+
 export default app
