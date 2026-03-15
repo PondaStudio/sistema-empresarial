@@ -96,7 +96,7 @@ export async function registrarMerma(req: AuthRequest, res: Response) {
   const { producto_id, sucursal_id, cantidad, motivo } = parsed.data
 
   // Decrease inventory
-  const { error: invError } = await supabase.rpc('decrement_inventario', {
+  const { error: _invError } = await supabase.rpc('decrement_inventario', {
     p_producto_id: producto_id, p_sucursal_id: sucursal_id, p_cantidad: cantidad
   })
 

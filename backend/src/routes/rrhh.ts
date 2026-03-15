@@ -14,7 +14,7 @@ const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SE
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } })
 
 // GET lista empleados con su usuario
-router.get('/empleados', requireAuth, checkPermission('rrhh', 'VER'), async (req: AuthRequest, res: Response) => {
+router.get('/empleados', requireAuth, checkPermission('rrhh', 'VER'), async (_req: AuthRequest, res: Response) => {
   const { data, error } = await supabase
     .from('empleados')
     .select('*, usuarios(nombre, email, foto_url, estado_presencia, rol_id, sucursal_id, roles(nombre), sucursales(nombre))')
