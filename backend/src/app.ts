@@ -59,4 +59,13 @@ import clientesRoutes     from './routes/clientes'
 app.use('/pedidos/venta', pedidosVentaRoutes)
 app.use('/clientes',      clientesRoutes)
 
+// Wave 4 routes
+import comunicacionRoutes from './routes/comunicacion'
+import tareasRoutes       from './routes/tareas'
+import rrhhRoutes         from './routes/rrhh'
+
+app.use('/comunicacion', comunicacionRoutes)
+app.use('/tareas',       tareasRoutes)
+app.use('/rrhh',         rrhhRoutes)
+
 export default app

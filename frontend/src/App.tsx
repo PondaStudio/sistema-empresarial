@@ -11,6 +11,8 @@ import PermisosPage   from './pages/admin/PermisosPage'
 import InventarioPage    from './pages/inventario/InventarioPage'
 // Wave 3 pages
 import PedidosVentaPage  from './pages/pedidos/PedidosVentaPage'
+// Wave 4 pages
+import TareasPage        from './pages/tareas/TareasPage'
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
           <Route path="/admin/permisos"   element={<PermisosPage />} />
           <Route path="/inventario"      element={<InventarioPage />} />
           <Route path="/pedidos/venta"   element={<PedidosVentaPage />} />
+          <Route path="/tareas"          element={<TareasPage />} />
 
           {/* Dashboard placeholder — Wave 5 */}
           <Route path="/dashboard" element={
