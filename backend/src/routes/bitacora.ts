@@ -15,7 +15,7 @@ router.get('/', requireAuth, checkPermission('bitacora', 'VER'), async (req: Aut
   const offset = (parseInt(page) - 1) * PAGE_SIZE
 
   let query = supabase
-    .from('bitacora')
+    .from('bitacora_actividad')
     .select('*, usuarios!usuario_id(nombre, email)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1)

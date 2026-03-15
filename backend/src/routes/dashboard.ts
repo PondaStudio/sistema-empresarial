@@ -8,7 +8,7 @@ import { Response } from 'express'
 const router = Router()
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
-router.get('/kpis', requireAuth, checkPermission('dashboard', 'VER'), async (req: AuthRequest, res: Response) => {
+router.get('/kpis', requireAuth, checkPermission('dashboard', 'VER'), async (_req: AuthRequest, res: Response) => {
   const now = new Date()
   const primerDiaMes = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
@@ -28,10 +28,9 @@ router.get('/kpis', requireAuth, checkPermission('dashboard', 'VER'), async (req
     supabase.from('tareas')
       .select('estado'),
 
-    // Productos con stock bajo mínimo
+    // Productos con stock bajo mínimo (column comparison done in JS)
     supabase.from('inventario')
-      .select('id', { count: 'exact' })
-      .filter('cantidad_actual', 'lte', 'stock_minimo'),
+      .select('cantidad_actual, stock_minimo'),
 
     // Usuarios con presencia activa
     supabase.from('usuarios')
@@ -50,12 +49,12 @@ router.get('/kpis', requireAuth, checkPermission('dashboard', 'VER'), async (req
     ventas_mes:        totalVentas,
     pedidos_pendientes: pedidosPendientes.count ?? 0,
     tareas:            tareasPorEstado,
-    stock_bajo:        stockBajo.count ?? 0,
+    stock_bajo:        (stockBajo.data ?? []).filter((i: any) => i.cantidad_actual <= (i.stock_minimo ?? 0)).length,
     usuarios_activos:  presencia.count ?? 0,
   })
 })
 
-router.get('/ventas-semana', requireAuth, checkPermission('dashboard', 'VER'), async (req: AuthRequest, res: Response) => {
+router.get('/ventas-semana', requireAuth, checkPermission('dashboard', 'VER'), async (_req: AuthRequest, res: Response) => {
   const hace7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { data, error } = await supabase
     .from('pedidos_venta')

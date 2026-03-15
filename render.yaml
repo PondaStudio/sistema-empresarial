@@ -1,0 +1,53 @@
+services:
+  # ── Backend Node.js/Express ──────────────────────────────
+  - type: web
+    name: sistema-empresarial-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: ANALYSIS_URL
+        sync: false
+      - key: INTERNAL_API_KEY
+        sync: false
+
+  # ── Analysis FastAPI ─────────────────────────────────────
+  - type: web
+    name: sistema-empresarial-analysis
+    env: python
+    rootDir: analysis
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: INTERNAL_API_KEY
+        sync: false
+
+  # ── Frontend React/Vite (Static Site) ───────────────────
+  - type: static
+    name: sistema-empresarial-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false

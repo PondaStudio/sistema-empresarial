@@ -19,7 +19,7 @@ const avisosSchema = z.object({
   expires_at:  z.string().datetime().optional(),
 })
 
-router.get('/', requireAuth, checkPermission('avisos', 'VER'), async (req: AuthRequest, res: Response) => {
+router.get('/', requireAuth, checkPermission('avisos', 'VER'), async (_req: AuthRequest, res: Response) => {
   const { data, error } = await supabase
     .from('avisos')
     .select('*, creado_por_user:usuarios!creado_por(nombre)')
