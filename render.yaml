@@ -4,7 +4,7 @@ services:
     name: sistema-empresarial-backend
     env: node
     rootDir: backend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     startCommand: node dist/server.js
     healthCheckPath: /health
     envVars:
@@ -42,7 +42,7 @@ services:
   - type: static
     name: sistema-empresarial-frontend
     rootDir: frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
