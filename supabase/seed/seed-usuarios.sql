@@ -3,15 +3,12 @@
 -- Ejecutar en Supabase SQL Editor
 -- Password para todos: Empresa2026!
 -- =============================================================
+-- Estructura real de public.usuarios:
+--   id, nombre, email, rol_id (FK → roles), sucursal_id,
+--   estado_presencia, foto_url, activo, created_at, updated_at
+-- =============================================================
 
--- PASO 0: Verificar estructura de la tabla
-SELECT column_name, data_type, is_nullable
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'usuarios'
-ORDER BY ordinal_position;
-
--- PASO 1: Insertar en auth.users
--- (Omite emails que ya existan para evitar duplicados)
+-- PASO 1: Insertar en auth.users (omite emails que ya existan)
 INSERT INTO auth.users (
   id,
   instance_id,
@@ -53,49 +50,39 @@ WHERE NOT EXISTS (
   SELECT 1 FROM auth.users au WHERE au.email = u.email
 );
 
--- PASO 2: Insertar en public.usuarios (solo los que no existen ya)
-INSERT INTO public.usuarios (id, email, nombre, rol, activo, sucursal_id, created_at)
+-- PASO 2: Insertar en public.usuarios usando rol_id desde tabla roles
+INSERT INTO public.usuarios (id, nombre, email, rol_id, sucursal_id, activo, created_at, updated_at)
 SELECT
   au.id,
-  au.email,
   u.nombre,
-  u.rol,
-  true,
+  au.email,
+  r.id AS rol_id,
   NULL,
+  true,
+  NOW(),
   NOW()
 FROM auth.users au
 JOIN (VALUES
-  ('pondaxems@gmail.com',    'Christian Ponda',     'creador'),
-  ('gerente@empresa.com',    'Roberto García',      'gerente'),
-  ('dueno@empresa.com',      'Carlos Dueño',        'supervisor_dueno'),
-  ('familiar@empresa.com',   'Ana Familiar',        'supervisor_familiar'),
-  ('admg2@empresa.com',      'Luis Admin',          'admin_g2'),
-  ('encargado@empresa.com',  'María Encargada',     'encargado_sucursal'),
-  ('bodega@empresa.com',     'José Bodega',         'encargado_bodega'),
-  ('admg1@empresa.com',      'Pedro Admin',         'admin_g1'),
-  ('cajera@empresa.com',     'Laura Cajera',        'cajera'),
-  ('almacenista@empresa.com','Miguel Almacenista',  'almacenista'),
-  ('vendedora@empresa.com',  'Sofia Vendedora',     'vendedora'),
-  ('promotor@empresa.com',   'Diego Promotor',      'promotor')
-) AS u(email, nombre, rol) ON au.email = u.email
+  ('pondaxems@gmail.com',    'Christian Ponda',     'Creador'),
+  ('gerente@empresa.com',    'Roberto García',      'Gerente General'),
+  ('dueno@empresa.com',      'Carlos Dueño',        'Supervisor Dueño'),
+  ('familiar@empresa.com',   'Ana Familiar',        'Supervisor Familiar'),
+  ('admg2@empresa.com',      'Luis Admin',          'Administrador G2'),
+  ('encargado@empresa.com',  'María Encargada',     'Encargado de Sucursal'),
+  ('bodega@empresa.com',     'José Bodega',         'Encargado de Bodega'),
+  ('admg1@empresa.com',      'Pedro Admin',         'Administrador G1'),
+  ('cajera@empresa.com',     'Laura Cajera',        'Cajeras'),
+  ('almacenista@empresa.com','Miguel Almacenista',  'Almacenistas G1'),
+  ('vendedora@empresa.com',  'Sofia Vendedora',     'Vendedoras'),
+  ('promotor@empresa.com',   'Diego Promotor',      'Promotores de Marca')
+) AS u(email, nombre, rol_nombre) ON au.email = u.email
+JOIN public.roles r ON r.nombre = u.rol_nombre
 WHERE NOT EXISTS (
   SELECT 1 FROM public.usuarios pu WHERE pu.id = au.id
 );
 
 -- PASO 3: Verificar resultado
-SELECT id, email, nombre, rol, activo FROM public.usuarios ORDER BY
-  CASE rol
-    WHEN 'creador'             THEN 1
-    WHEN 'gerente'             THEN 2
-    WHEN 'supervisor_dueno'    THEN 3
-    WHEN 'supervisor_familiar' THEN 4
-    WHEN 'admin_g2'            THEN 5
-    WHEN 'encargado_sucursal'  THEN 6
-    WHEN 'encargado_bodega'    THEN 7
-    WHEN 'admin_g1'            THEN 8
-    WHEN 'cajera'              THEN 9
-    WHEN 'almacenista'         THEN 10
-    WHEN 'vendedora'           THEN 11
-    WHEN 'promotor'            THEN 12
-    ELSE 99
-  END;
+SELECT u.nombre, u.email, r.nombre AS rol, r.nivel, u.activo
+FROM public.usuarios u
+JOIN public.roles r ON r.id = u.rol_id
+ORDER BY r.nivel;
