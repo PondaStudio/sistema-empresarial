@@ -27,7 +27,7 @@ const ESTADO_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 export default function PedidosVentaPage() {
-  const { can, user } = useAuthStore()
+  const { can } = useAuthStore()
   const [pedidos, setPedidos] = useState<PedidoResumen[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<any>(null)

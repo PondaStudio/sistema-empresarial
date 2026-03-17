@@ -32,7 +32,7 @@ const NEXT_ACTION: Record<string, { label: string; endpoint: string; color: stri
 }
 
 export default function TareasPage() {
-  const { user, can } = useAuthStore()
+  const { can } = useAuthStore()
   const [tareas, setTareas]   = useState<Tarea[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Tarea | null>(null)

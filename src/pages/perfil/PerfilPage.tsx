@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 export default function PerfilPage() {
   const { user, setAuth, token } = useAuthStore()
-  const [presencia, setPresencia] = useState(user?.estado_presencia ?? 'disponible')
+  const [presencia, setPresencia] = useState<string>(user?.estado_presencia ?? 'disponible')
   const [saving, setSaving] = useState(false)
 
   if (!user) return null
