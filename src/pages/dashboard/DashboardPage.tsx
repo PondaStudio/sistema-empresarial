@@ -45,7 +45,7 @@ export default function DashboardPage() {
   if (loading) return <div className="p-8 text-center text-gray-500">Cargando dashboard...</div>
   if (!kpis)   return null
 
-  const tareasTotal = Object.values(kpis.tareas).reduce((a, b) => a + b, 0)
+  const tareasTotal = Object.values(kpis.tareas ?? {}).reduce((a, b) => a + b, 0)
   const maxVenta = Math.max(...ventas.map(v => v.total), 1)
 
   return (

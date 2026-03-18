@@ -113,11 +113,11 @@ function getInitials(nombre: string) {
 
 export default function MockLoginPage() {
   const navigate = useNavigate()
-  const { setAuth, setPermisos } = useAuthStore()
 
   const handleSelect = (user: MockUser) => {
-    setAuth(
-      {
+    // Actualización atómica: user + token + permisos en un solo set
+    useAuthStore.setState({
+      user: {
         id: user.id,
         nombre: user.nombre,
         email: user.email,
@@ -128,9 +128,9 @@ export default function MockLoginPage() {
         activo: true,
         roles: { nivel: user.nivel, nombre: user.rol },
       },
-      `mock-${user.id}`
-    )
-    setPermisos(generatePermisos(user.nivel))
+      token: `mock-${user.id}`,
+      permisos: generatePermisos(user.nivel),
+    })
     navigate('/dashboard')
   }
 
