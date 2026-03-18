@@ -31,6 +31,7 @@ const ADMIN_NAV: NavItem[] = [
 
 export function Sidebar() {
   const { user, can } = useAuthStore()
+  const isCreador = user?.roles?.nivel === 1
 
   return (
     <aside className="w-60 shrink-0 bg-white dark:bg-gray-900 border-r dark:border-gray-700 flex flex-col h-full">
@@ -74,6 +75,19 @@ export function Sidebar() {
                 {item.label}
               </NavLink>
             ))}
+            {isCreador && (
+              <NavLink to="/admin/permisos"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
+                    isActive
+                      ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`
+                }>
+                <span className="w-5 text-center">🛡️</span>
+                Permisos Granulares
+              </NavLink>
+            )}
           </>
         )}
       </nav>

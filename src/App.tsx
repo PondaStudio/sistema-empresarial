@@ -59,8 +59,9 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 import MockLoginPage  from './pages/auth/MockLoginPage'
 import LoginPage      from './pages/auth/LoginPage'
 import PerfilPage     from './pages/perfil/PerfilPage'
-import UsuariosPage   from './pages/admin/UsuariosPage'
-import PermisosPage   from './pages/admin/PermisosPage'
+import UsuariosPage         from './pages/admin/UsuariosPage'
+import PermisosPage         from './pages/admin/PermisosPage'
+import GestionPermisosPage  from './pages/admin/GestionPermisosPage'
 // Wave 2 pages
 import InventarioPage    from './pages/inventario/InventarioPage'
 // Wave 3 pages
@@ -95,7 +96,8 @@ function App() {
             <Route path="/dashboard"        element={<DashboardPage />} />
             <Route path="/perfil"           element={<PerfilPage />} />
             <Route path="/admin/usuarios"   element={<UsuariosPage />} />
-            <Route path="/admin/permisos"   element={<PermisosPage />} />
+            <Route path="/admin/permisos"         element={<GestionPermisosPage />} />
+            <Route path="/admin/permisos/legacy" element={<PermisosPage />} />
             <Route path="/inventario"       element={<InventarioPage />} />
             <Route path="/pedidos/venta"    element={<PedidosVentaPage />} />
             <Route path="/clientes"         element={<ClientesPage />} />

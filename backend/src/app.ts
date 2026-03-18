@@ -88,4 +88,8 @@ app.use('/capacitaciones', capacitacionesRoutes)
 app.use('/evaluaciones',   evaluacionesRoutes)
 app.use('/formatos',       formatosRoutes)
 
+// Wave 6 routes — permisos granulares
+import permisosGranularesRoutes from './routes/permisosGranulares'
+app.use('/', permisosGranularesRoutes)
+
 export default app
