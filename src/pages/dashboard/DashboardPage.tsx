@@ -14,6 +14,14 @@ interface VentaDia {
   total: number
 }
 
+const EMPTY_KPIS: KPIs = {
+  ventas_mes: 0,
+  pedidos_pendientes: 0,
+  tareas: {},
+  stock_bajo: 0,
+  usuarios_activos: 0,
+}
+
 function KPICard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color: string }) {
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border-l-4 ${color}`}>
@@ -34,19 +42,22 @@ export default function DashboardPage() {
       api.get('/dashboard/kpis'),
       api.get('/dashboard/ventas-semana'),
     ]).then(([k, v]) => {
-      setKpis(k.data)
-      setVentas(v.data)
-    }).catch(() => {
-      // Modo mock: mostrar dashboard vacío sin datos reales
-      setKpis({ ventas_mes: 0, pedidos_pendientes: 0, tareas: {}, stock_bajo: 0, usuarios_activos: 0 })
+      setKpis(k.data ?? EMPTY_KPIS)
+      setVentas(Array.isArray(v.data) ? v.data : [])
+    }).catch((err) => {
+      console.error('[Dashboard] Error cargando datos:', err)
+      setKpis(EMPTY_KPIS)
+      setVentas([])
     }).finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="p-8 text-center text-gray-500">Cargando dashboard...</div>
   if (!kpis)   return null
 
-  const tareasTotal = Object.values(kpis.tareas ?? {}).reduce((a, b) => a + b, 0)
-  const maxVenta = Math.max(...ventas.map(v => v.total), 1)
+  const tareas   = kpis.tareas ?? {}
+  const ventaArr = ventas ?? []
+  const tareasTotal = Object.values(tareas).reduce((a, b) => a + b, 0)
+  const maxVenta    = Math.max(...ventaArr.map(v => v.total), 1)
 
   return (
     <div className="p-6 space-y-6">
@@ -56,26 +67,26 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           label="Ventas del mes"
-          value={`$${kpis.ventas_mes.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`}
+          value={`$${(kpis.ventas_mes ?? 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}`}
           color="border-green-500"
         />
         <KPICard
           label="Pedidos pendientes"
-          value={kpis.pedidos_pendientes}
+          value={kpis.pedidos_pendientes ?? 0}
           sub="Requieren atención"
           color="border-yellow-500"
         />
         <KPICard
           label="Tareas activas"
           value={tareasTotal}
-          sub={`${kpis.tareas.completada ?? 0} completadas`}
+          sub={`${tareas.completada ?? 0} completadas`}
           color="border-blue-500"
         />
         <KPICard
           label="Stock bajo mínimo"
-          value={kpis.stock_bajo}
+          value={kpis.stock_bajo ?? 0}
           sub="Productos a reponer"
-          color={kpis.stock_bajo > 0 ? 'border-red-500' : 'border-gray-300'}
+          color={(kpis.stock_bajo ?? 0) > 0 ? 'border-red-500' : 'border-gray-300'}
         />
       </div>
 
@@ -83,11 +94,11 @@ export default function DashboardPage() {
         {/* Ventas últimos 7 días */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Ventas — últimos 7 días</h2>
-          {ventas.length === 0 ? (
+          {ventaArr.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-8">Sin datos</p>
           ) : (
             <div className="flex items-end gap-2 h-32">
-              {ventas.map(v => (
+              {ventaArr.map(v => (
                 <div key={v.fecha} className="flex-1 flex flex-col items-center gap-1">
                   <div
                     className="w-full bg-primary-500 rounded-t-sm"
@@ -114,8 +125,8 @@ export default function DashboardPage() {
               { key: 'rechazada',   label: 'Rechazada',    color: 'bg-red-500' },
               { key: 'completada',  label: 'Completada',   color: 'bg-green-500' },
             ].map(({ key, label, color }) => {
-              const count = kpis.tareas[key] ?? 0
-              const pct = tareasTotal > 0 ? Math.round((count / tareasTotal) * 100) : 0
+              const count = tareas[key] ?? 0
+              const pct   = tareasTotal > 0 ? Math.round((count / tareasTotal) * 100) : 0
               return (
                 <div key={key} className="flex items-center gap-2">
                   <span className="text-xs text-gray-600 dark:text-gray-400 w-24 shrink-0">{label}</span>
@@ -134,7 +145,7 @@ export default function DashboardPage() {
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm flex items-center gap-3">
         <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          <span className="font-semibold text-gray-900 dark:text-white">{kpis.usuarios_activos}</span> usuario(s) disponibles ahora
+          <span className="font-semibold text-gray-900 dark:text-white">{kpis.usuarios_activos ?? 0}</span> usuario(s) disponibles ahora
         </p>
       </div>
     </div>
