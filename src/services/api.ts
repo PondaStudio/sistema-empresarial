@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { supabase } from './supabase'
+import { useAuthStore } from '../store/authStore'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
@@ -11,6 +12,10 @@ api.interceptors.request.use(async (config) => {
   const { data } = await supabase.auth.getSession()
   if (data.session?.access_token) {
     config.headers.Authorization = `Bearer ${data.session.access_token}`
+  } else {
+    // Fallback: mock session token (dev mode)
+    const { token } = useAuthStore.getState()
+    if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
@@ -19,8 +24,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      supabase.auth.signOut()
-      window.location.href = '/login'
+      const { token } = useAuthStore.getState()
+      // En modo mock no redirigir; el dashboard mostrará estado vacío
+      if (!token?.startsWith('mock-')) {
+        supabase.auth.signOut()
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }

@@ -36,6 +36,9 @@ export default function DashboardPage() {
     ]).then(([k, v]) => {
       setKpis(k.data)
       setVentas(v.data)
+    }).catch(() => {
+      // Modo mock: mostrar dashboard vacío sin datos reales
+      setKpis({ ventas_mes: 0, pedidos_pendientes: 0, tareas: {}, stock_bajo: 0, usuarios_activos: 0 })
     }).finally(() => setLoading(false))
   }, [])
 

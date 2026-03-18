@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
 
 // Wave 1 pages
+import MockLoginPage  from './pages/auth/MockLoginPage'
 import LoginPage      from './pages/auth/LoginPage'
 import PerfilPage     from './pages/perfil/PerfilPage'
 import UsuariosPage   from './pages/admin/UsuariosPage'
@@ -32,7 +33,8 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Routes>
         {/* Public */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login"      element={<MockLoginPage />} />
+        <Route path="/login-real" element={<LoginPage />} />
 
         {/* Protected — requiere autenticación */}
         <Route element={<ProtectedRoute />}>
