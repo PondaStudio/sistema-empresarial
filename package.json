@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cd backend && npm install --omit=dev && npm run build",
+    "build": "tsc && vite build && npm install --prefix backend --omit=dev && npm run build --prefix backend",
     "start": "node server.js",
     "preview": "vite preview",
     "test": "vitest",
