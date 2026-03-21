@@ -14,8 +14,13 @@ api.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${data.session.access_token}`
   } else {
     // Fallback: mock session token (dev mode)
-    const { token } = useAuthStore.getState()
+    const { token, user } = useAuthStore.getState()
     if (token) config.headers.Authorization = `Bearer ${token}`
+    // Si el token es mock, agrega headers especiales para el backend
+    if (token?.startsWith('mock-')) {
+      config.headers['X-Mock-User'] = 'true'
+      config.headers['X-Mock-Level'] = String(user?.roles?.nivel ?? 99)
+    }
   }
   return config
 })
