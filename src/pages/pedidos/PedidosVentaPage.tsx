@@ -121,6 +121,9 @@ export default function PedidosVentaPage() {
   const [showNuevo, setShowNuevo] = useState(false)
   const [isMockMode, setIsMockMode] = useState(false)
 
+  // Almacenistas (nivel 9) ven pedidos de su sucursal, no solo los propios
+  const isAlmacenista = nivel === 9
+
   // ── Carga inicial ──
   useEffect(() => {
     api.get('/pedidos/venta')
@@ -128,7 +131,11 @@ export default function PedidosVentaPage() {
         setPedidos(Array.isArray(r.data) ? r.data : MOCK_PEDIDOS)
       })
       .catch(() => {
-        setPedidos(MOCK_PEDIDOS)
+        // Mock fallback: almacenistas ven pedidos pendientes de confirmación
+        const mockFallback = isAlmacenista
+          ? MOCK_PEDIDOS.filter(p => ['pendiente_confirmacion', 'en_revision', 'confirmado', 'impreso'].includes(p.estado))
+          : MOCK_PEDIDOS
+        setPedidos(mockFallback)
         setIsMockMode(true)
       })
       .finally(() => setLoading(false))

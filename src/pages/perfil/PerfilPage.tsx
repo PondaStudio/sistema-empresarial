@@ -8,19 +8,31 @@ export default function PerfilPage() {
   const { user, setAuth, token } = useAuthStore()
   const [presencia, setPresencia] = useState<string>(user?.estado_presencia ?? 'disponible')
   const [saving, setSaving] = useState(false)
-  const [numAgente, setNumAgente] = useState<string>(user?.numero_agente ?? '')
+  const isMockInit = useAuthStore.getState().token?.startsWith('mock-token-') ?? false
+  const [numAgente, setNumAgente] = useState<string>(
+    isMockInit ? (localStorage.getItem('mock_numero_agente') ?? user?.numero_agente ?? '') : (user?.numero_agente ?? '')
+  )
   const [savingAgente, setSavingAgente] = useState(false)
 
   if (!user) return null
 
   const estadoActual = ESTADOS_PRESENCIA.find(e => e.value === presencia)
 
+  const isMock = token?.startsWith('mock-token-') ?? false
+
   async function saveNumAgente() {
     setSavingAgente(true)
+    const value = numAgente.trim() || null
     try {
-      await api.patch('/users/me', { numero_agente: numAgente.trim() || null })
-      setAuth({ ...user!, numero_agente: numAgente.trim() || null }, token!)
-      toast.success('Número de agente actualizado')
+      if (isMock) {
+        localStorage.setItem('mock_numero_agente', value ?? '')
+        setAuth({ ...user!, numero_agente: value }, token!)
+        toast.success('Guardado localmente (modo prueba)')
+      } else {
+        await api.patch('/users/me', { numero_agente: value })
+        setAuth({ ...user!, numero_agente: value }, token!)
+        toast.success('Número de agente actualizado')
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message ?? 'Error al actualizar número de agente'
       toast.error(msg)
