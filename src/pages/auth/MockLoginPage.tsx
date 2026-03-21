@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import type { Permisos } from '../../types'
+import { getInitials } from '../../utils/strings'
 
 interface MockUser {
   id: string
@@ -105,10 +106,6 @@ function generatePermisos(nivel: number): Permisos {
     }
   }
   return permisos
-}
-
-function getInitials(nombre: string) {
-  return nombre.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
 export default function MockLoginPage() {

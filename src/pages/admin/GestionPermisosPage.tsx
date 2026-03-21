@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import api from '../../services/api'
+import { getInitials } from '../../utils/strings'
 import toast from 'react-hot-toast'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -122,7 +123,7 @@ const NIVEL_COLORS = [
   'bg-rose-600', 'bg-red-600',
 ]
 function avatarColor(nivel = 1) { return NIVEL_COLORS[Math.min(nivel - 1, NIVEL_COLORS.length - 1)] }
-function initials(nombre: string) { return nombre.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() }
+
 function cycleNivel(n: Nivel): Nivel { return n === 0 ? 2 : n === 2 ? 1 : 0 }
 
 // ─── Componente toggle 3 estados ─────────────────────────────────────────────
@@ -352,7 +353,7 @@ export default function GestionPermisosPage() {
                   }`}
                 >
                   <div className={`w-9 h-9 rounded-full ${avatarColor(nivel)} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
-                    {initials(user.nombre)}
+                    {getInitials(user.nombre)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-gray-100'}`}>
@@ -381,7 +382,7 @@ export default function GestionPermisosPage() {
             {/* Header del editor */}
             <div className="shrink-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-6 py-4 flex items-center gap-4">
               <div className={`w-12 h-12 rounded-full ${avatarColor(selectedUser.roles?.nivel)} flex items-center justify-center text-sm font-bold text-white shrink-0`}>
-                {initials(selectedUser.nombre)}
+                {getInitials(selectedUser.nombre)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-gray-900 dark:text-white truncate">{selectedUser.nombre}</p>

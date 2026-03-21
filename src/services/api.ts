@@ -19,10 +19,6 @@ api.interceptors.request.use(async (config) => {
       const nivel = user?.roles?.nivel ?? 99
       const mockToken = `mock-token-nivel-${nivel}`
       config.headers.Authorization = `Bearer ${mockToken}`
-      console.log('[api] mock request headers:', {
-        Authorization: config.headers.Authorization,
-        url: config.url,
-      })
     } else if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
