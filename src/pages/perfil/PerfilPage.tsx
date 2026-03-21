@@ -21,8 +21,9 @@ export default function PerfilPage() {
       await api.patch('/users/me', { numero_agente: numAgente.trim() || null })
       setAuth({ ...user!, numero_agente: numAgente.trim() || null }, token!)
       toast.success('Número de agente actualizado')
-    } catch {
-      toast.error('Error al actualizar número de agente')
+    } catch (err: any) {
+      const msg = err.response?.data?.message ?? 'Error al actualizar número de agente'
+      toast.error(msg)
     } finally {
       setSavingAgente(false)
     }
