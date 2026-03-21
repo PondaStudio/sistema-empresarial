@@ -86,10 +86,10 @@ import FormatosPage       from './pages/formatos/FormatosPage'
 
 function PedidosRouter() {
   const nivel = useAuthStore(s => s.user?.roles?.nivel ?? 99)
-  if (nivel >= 11) return <Navigate to="/pedidos/venta" replace />
-  if (nivel === 10) return <Navigate to="/pedidos/surtido" replace />
-  if (nivel === 9)  return <Navigate to="/pedidos/caja" replace />
-  // nivel <= 8: supervisores y admin ven todas las notas (vista vendedora)
+  if (nivel >= 10) return <Navigate to="/pedidos/venta" replace />
+  if (nivel === 9)  return <Navigate to="/pedidos/surtido" replace />
+  if (nivel === 8)  return <Navigate to="/pedidos/caja" replace />
+  // nivel <= 7: encargados y superiores → vista completa
   return <Navigate to="/pedidos/venta" replace />
 }
 

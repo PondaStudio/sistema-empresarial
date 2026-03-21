@@ -22,11 +22,11 @@ const MOCK_USERS: MockUser[] = [
   { id: '4cd57c7f-33b4-4a4d-b219-4ac967f184a1', nombre: 'Luis Admin',         email: 'admg2@empresa.com',       rol_id: 'rol-05', nivel: 5,  rol: 'Administrador G2',       gradiente: 'from-teal-500 via-teal-700 to-teal-900',       icon: '⚙️' },
   { id: '8a079946-b8c8-41e7-a52e-50efe21e9e71', nombre: 'María Encargada',    email: 'encargado@empresa.com',   rol_id: 'rol-06', nivel: 6,  rol: 'Encargado de Sucursal',  gradiente: 'from-emerald-500 via-emerald-700 to-emerald-900', icon: '🏪' },
   { id: '957aca8e-8cff-41a1-bf63-3dfc95755a8e', nombre: 'José Bodega',        email: 'bodega@empresa.com',      rol_id: 'rol-07', nivel: 7,  rol: 'Encargado de Bodega',    gradiente: 'from-green-500 via-green-700 to-green-900',    icon: '📦' },
-  { id: '343067c0-5e23-4e22-bce4-ff6f487375e3', nombre: 'Pedro Admin',        email: 'admg1@empresa.com',       rol_id: 'rol-08', nivel: 8,  rol: 'Administrador G1',       gradiente: 'from-lime-500 via-lime-700 to-lime-900',       icon: '🗂️' },
-  { id: 'bb634c06-9920-4ff8-8cc6-e0cd22757af8', nombre: 'Laura Cajera',       email: 'cajera@empresa.com',      rol_id: 'rol-09', nivel: 9,  rol: 'Cajera',                 gradiente: 'from-amber-500 via-amber-600 to-amber-800',    icon: '💰' },
-  { id: 'd99b43d7-134f-4878-891f-34f539626758', nombre: 'Miguel Almacenista', email: 'almacenista@empresa.com', rol_id: 'rol-10', nivel: 10, rol: 'Almacenista G1',         gradiente: 'from-orange-500 via-orange-700 to-orange-900', icon: '🏗️' },
-  { id: '45a6c286-7ba6-4425-91d9-5e8fd108db9e', nombre: 'Sofia Vendedora',    email: 'vendedora@empresa.com',   rol_id: 'rol-11', nivel: 11, rol: 'Vendedora',              gradiente: 'from-rose-500 via-rose-700 to-rose-900',       icon: '🛍️' },
-  { id: '3d330838-ba39-4fed-97a6-d9521327ea6a', nombre: 'Diego Promotor',     email: 'promotor@empresa.com',    rol_id: 'rol-12', nivel: 12, rol: 'Promotor de Marca',      gradiente: 'from-red-500 via-red-700 to-red-900',          icon: '📣' },
+  { id: '343067c0-5e23-4e22-bce4-ff6f487375e3', nombre: 'Pedro Admin',        email: 'admg1@empresa.com',       rol_id: 'rol-08', nivel: 7,  rol: 'Administrador G1',       gradiente: 'from-lime-500 via-lime-700 to-lime-900',       icon: '🗂️' },
+  { id: 'bb634c06-9920-4ff8-8cc6-e0cd22757af8', nombre: 'Laura Cajera',       email: 'cajera@empresa.com',      rol_id: 'rol-09', nivel: 8,  rol: 'Cajera',                 gradiente: 'from-amber-500 via-amber-600 to-amber-800',    icon: '💰' },
+  { id: 'd99b43d7-134f-4878-891f-34f539626758', nombre: 'Miguel Almacenista', email: 'almacenista@empresa.com', rol_id: 'rol-10', nivel: 9,  rol: 'Almacenista G1',         gradiente: 'from-orange-500 via-orange-700 to-orange-900', icon: '🏗️' },
+  { id: '45a6c286-7ba6-4425-91d9-5e8fd108db9e', nombre: 'Sofia Vendedora',    email: 'vendedora@empresa.com',   rol_id: 'rol-11', nivel: 10, rol: 'Vendedora',              gradiente: 'from-rose-500 via-rose-700 to-rose-900',       icon: '🛍️' },
+  { id: '3d330838-ba39-4fed-97a6-d9521327ea6a', nombre: 'Diego Promotor',     email: 'promotor@empresa.com',    rol_id: 'rol-12', nivel: 11, rol: 'Promotor de Marca',      gradiente: 'from-red-500 via-red-700 to-red-900',          icon: '📣' },
 ]
 
 const GRUPOS = [
