@@ -1,11 +1,10 @@
 import { Router } from 'express'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 import { requireAuth } from '../middleware/auth'
 import { AuthRequest } from '../middleware/auth'
 import { Response } from 'express'
 
 const router = Router()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
 // GET mis notificaciones (últimas 50)
 router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {

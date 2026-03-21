@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 import { requireAuth } from '../middleware/auth'
 import { checkPermission } from '../middleware/permissions'
 import { auditLog } from '../middleware/audit'
@@ -9,7 +9,6 @@ import { Response } from 'express'
 import multer from 'multer'
 
 const router = Router()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
 
 const tareaSchema = z.object({

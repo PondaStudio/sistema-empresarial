@@ -1,12 +1,7 @@
 import { Request, Response } from 'express'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 const inviteSchema = z.object({
   email:       z.string().email(),

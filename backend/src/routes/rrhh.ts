@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 import { requireAuth } from '../middleware/auth'
 import { checkPermission } from '../middleware/permissions'
 import { auditLog } from '../middleware/audit'
@@ -10,7 +10,6 @@ import multer from 'multer'
 import Papa from 'papaparse'
 
 const router = Router()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } })
 
 // GET lista empleados con su usuario

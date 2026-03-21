@@ -1,9 +1,7 @@
 import { Response } from 'express'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
 export async function listProductos(req: AuthRequest, res: Response) {
   const { q, categoria_id, activo = 'true' } = req.query as Record<string, string>
