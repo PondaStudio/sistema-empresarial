@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 import { Component, ErrorInfo, ReactNode } from 'react'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
+import { useAuthStore } from './store/authStore'
 
 // ── ErrorBoundary global ─────────────────────────────────────────────────────
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -66,6 +67,9 @@ import GestionPermisosPage  from './pages/admin/GestionPermisosPage'
 import InventarioPage    from './pages/inventario/InventarioPage'
 // Wave 3 pages
 import PedidosVentaPage  from './pages/pedidos/PedidosVentaPage'
+import VistaCajaPage     from './pages/pedidos/VistaCajaPage'
+import VistaSurtidoPage  from './pages/pedidos/VistaSurtidoPage'
+import VistaChecadorPage from './pages/pedidos/VistaChecadorPage'
 import ClientesPage      from './pages/clientes/ClientesPage'
 import ProveedoresPage   from './pages/proveedores/ProveedoresPage'
 // Wave 4 pages
@@ -79,6 +83,15 @@ import BitacoraPage       from './pages/bitacora/BitacoraPage'
 import CapacitacionesPage from './pages/capacitaciones/CapacitacionesPage'
 import EvaluacionesPage   from './pages/evaluaciones/EvaluacionesPage'
 import FormatosPage       from './pages/formatos/FormatosPage'
+
+function PedidosRouter() {
+  const nivel = useAuthStore(s => s.user?.roles?.nivel ?? 99)
+  if (nivel >= 11) return <Navigate to="/pedidos/venta" replace />
+  if (nivel === 10) return <Navigate to="/pedidos/surtido" replace />
+  if (nivel === 9)  return <Navigate to="/pedidos/caja" replace />
+  // nivel <= 8: supervisores y admin ven todas las notas (vista vendedora)
+  return <Navigate to="/pedidos/venta" replace />
+}
 
 function App() {
   return (
@@ -99,7 +112,14 @@ function App() {
             <Route path="/admin/permisos"         element={<GestionPermisosPage />} />
             <Route path="/admin/permisos/legacy" element={<PermisosPage />} />
             <Route path="/inventario"       element={<InventarioPage />} />
+
+            {/* Pedidos — vistas por rol */}
+            <Route path="/pedidos"          element={<PedidosRouter />} />
             <Route path="/pedidos/venta"    element={<PedidosVentaPage />} />
+            <Route path="/pedidos/caja"     element={<VistaCajaPage />} />
+            <Route path="/pedidos/surtido"  element={<VistaSurtidoPage />} />
+            <Route path="/pedidos/checador" element={<VistaChecadorPage />} />
+
             <Route path="/clientes"         element={<ClientesPage />} />
             <Route path="/proveedores"      element={<ProveedoresPage />} />
             <Route path="/tareas"           element={<TareasPage />} />

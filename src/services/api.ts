@@ -17,7 +17,8 @@ api.interceptors.request.use(async (config) => {
     const { token, user } = useAuthStore.getState()
     if (token?.startsWith('mock-')) {
       const nivel = user?.roles?.nivel ?? 99
-      const mockToken = `mock-token-nivel-${nivel}`
+      const uid = user?.id ?? 'mock-user'
+      const mockToken = `mock-token-nivel-${nivel}-uid-${uid}`
       config.headers.Authorization = `Bearer ${mockToken}`
     } else if (token) {
       config.headers.Authorization = `Bearer ${token}`
