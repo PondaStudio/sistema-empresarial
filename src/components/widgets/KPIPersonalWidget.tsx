@@ -11,8 +11,8 @@ export function KPIPersonalWidget() {
   const [loading] = useState(false)
 
 
-  const pctDia = Math.min(Math.round((data.ventas_hoy / data.meta_dia) * 100), 100)
-  const pctMes = Math.min(Math.round((data.ventas_mes / data.meta_mes) * 100), 100)
+  const pctDia = Math.min(Math.round(((data.ventas_hoy ?? 0) / (data.meta_dia || 1)) * 100), 100)
+  const pctMes = Math.min(Math.round(((data.ventas_mes ?? 0) / (data.meta_mes || 1)) * 100), 100)
 
   return (
     <WidgetWrapper
@@ -34,8 +34,8 @@ export function KPIPersonalWidget() {
             />
           </div>
           <div className="flex justify-between text-xs mt-1 text-gray-400">
-            <span>${data.ventas_hoy.toLocaleString('es-MX')}</span>
-            <span>Meta: ${data.meta_dia.toLocaleString('es-MX')}</span>
+            <span>${(data.ventas_hoy ?? 0).toLocaleString('es-MX')}</span>
+            <span>Meta: ${(data.meta_dia ?? 0).toLocaleString('es-MX')}</span>
           </div>
         </div>
 
@@ -51,8 +51,8 @@ export function KPIPersonalWidget() {
             />
           </div>
           <div className="flex justify-between text-xs mt-1 text-gray-400">
-            <span>${data.ventas_mes.toLocaleString('es-MX')}</span>
-            <span>Meta: ${data.meta_mes.toLocaleString('es-MX')}</span>
+            <span>${(data.ventas_mes ?? 0).toLocaleString('es-MX')}</span>
+            <span>Meta: ${(data.meta_mes ?? 0).toLocaleString('es-MX')}</span>
           </div>
         </div>
       </div>

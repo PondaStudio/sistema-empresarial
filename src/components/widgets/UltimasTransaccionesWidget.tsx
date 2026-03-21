@@ -13,7 +13,7 @@ const MOCK: Transaccion[] = [
 
 export function UltimasTransaccionesWidget() {
   const [data] = useState<Transaccion[]>(MOCK)
-  const totalDia = data.filter(t => t.tipo === 'cobro' && !t.hora.startsWith('Ayer')).reduce((s, t) => s + t.monto, 0)
+  const totalDia = (data ?? []).filter(t => t.tipo === 'cobro' && !t.hora.startsWith('Ayer')).reduce((s, t) => s + (t.monto ?? 0), 0)
 
   return (
     <WidgetWrapper
@@ -31,7 +31,7 @@ export function UltimasTransaccionesWidget() {
               <p className="text-[10px] text-gray-400">{t.id} · {t.hora}</p>
             </div>
             <span className={`text-xs font-bold shrink-0 ${t.tipo === 'cobro' ? 'text-green-600' : 'text-red-500'}`}>
-              {t.tipo === 'devolucion' ? '-' : '+'}${t.monto.toLocaleString('es-MX')}
+              {t.tipo === 'devolucion' ? '-' : '+'}${(t.monto ?? 0).toLocaleString('es-MX')}
             </span>
           </div>
         ))}

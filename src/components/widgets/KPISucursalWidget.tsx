@@ -21,10 +21,10 @@ export function KPISucursalWidget() {
     >
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: <TrendingUp size={14} />, label: 'Ventas hoy',    value: `$${data.ventas_dia.toLocaleString('es-MX')}`, color: 'border-blue-500' },
-          { icon: <TrendingUp size={14} />, label: 'Ventas mes',    value: `$${data.ventas_mes.toLocaleString('es-MX')}`, color: 'border-blue-400' },
-          { icon: <ShoppingCart size={14} />, label: 'Pedidos activos', value: String(data.pedidos_activos), color: 'border-amber-500' },
-          { icon: <Package size={14} />, label: 'Stock bajo',      value: String(data.stock_bajo), color: data.stock_bajo > 0 ? 'border-red-500' : 'border-gray-300' },
+          { icon: <TrendingUp size={14} />, label: 'Ventas hoy',    value: `$${(data.ventas_dia ?? 0).toLocaleString('es-MX')}`, color: 'border-blue-500' },
+          { icon: <TrendingUp size={14} />, label: 'Ventas mes',    value: `$${(data.ventas_mes ?? 0).toLocaleString('es-MX')}`, color: 'border-blue-400' },
+          { icon: <ShoppingCart size={14} />, label: 'Pedidos activos', value: String(data.pedidos_activos ?? 0), color: 'border-amber-500' },
+          { icon: <Package size={14} />, label: 'Stock bajo',      value: String(data.stock_bajo ?? 0), color: (data.stock_bajo ?? 0) > 0 ? 'border-red-500' : 'border-gray-300' },
         ].map((t, i) => (
           <div key={i} className={`rounded-xl p-3 border-l-4 ${t.color} bg-gray-50 dark:bg-gray-800`}>
             <div className="flex items-center gap-1 text-gray-400 mb-1">{t.icon}<span className="text-[10px] uppercase">{t.label}</span></div>

@@ -50,7 +50,7 @@ export function MisPedidosHoyWidget() {
                 <p className="text-xs text-gray-500 truncate">{p.cliente}</p>
               </div>
               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                ${p.total.toLocaleString('es-MX')}
+                ${(p.total ?? 0).toLocaleString('es-MX')}
               </span>
             </div>
           ))}

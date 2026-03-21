@@ -56,12 +56,12 @@ export function KPIsGlobalesWidget() {
       footer={<span>Actualizado hace unos momentos · <button className="text-blue-500 hover:underline">Refrescar</button></span>}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KPITile icon={<TrendingUp size={14} />} label="Ventas hoy" value={`$${d.ventas_dia.toLocaleString('es-MX')}`} sub="vs ayer +8%" color="border-blue-500" />
-        <KPITile icon={<TrendingUp size={14} />} label="Esta semana" value={`$${d.ventas_semana.toLocaleString('es-MX')}`} color="border-blue-400" />
-        <KPITile icon={<TrendingUp size={14} />} label="Este mes" value={`$${d.ventas_mes.toLocaleString('es-MX')}`} color="border-blue-300" />
-        <KPITile icon={<ShoppingCart size={14} />} label="Pedidos pendientes" value={String(d.pedidos_pendientes)} sub="Requieren atención" color="border-amber-500" />
-        <KPITile icon={<Package size={14} />} label="Stock bajo" value={String(d.stock_bajo)} sub="Productos a reponer" color={d.stock_bajo > 0 ? 'border-red-500' : 'border-gray-300'} />
-        <KPITile icon={<Users size={14} />} label="Usuarios activos" value={String(d.usuarios_activos)} sub="Conectados ahora" color="border-emerald-500" />
+        <KPITile icon={<TrendingUp size={14} />} label="Ventas hoy" value={`$${(d.ventas_dia ?? 0).toLocaleString('es-MX')}`} sub="vs ayer +8%" color="border-blue-500" />
+        <KPITile icon={<TrendingUp size={14} />} label="Esta semana" value={`$${(d.ventas_semana ?? 0).toLocaleString('es-MX')}`} color="border-blue-400" />
+        <KPITile icon={<TrendingUp size={14} />} label="Este mes" value={`$${(d.ventas_mes ?? 0).toLocaleString('es-MX')}`} color="border-blue-300" />
+        <KPITile icon={<ShoppingCart size={14} />} label="Pedidos pendientes" value={String(d.pedidos_pendientes ?? 0)} sub="Requieren atención" color="border-amber-500" />
+        <KPITile icon={<Package size={14} />} label="Stock bajo" value={String(d.stock_bajo ?? 0)} sub="Productos a reponer" color={(d.stock_bajo ?? 0) > 0 ? 'border-red-500' : 'border-gray-300'} />
+        <KPITile icon={<Users size={14} />} label="Usuarios activos" value={String(d.usuarios_activos ?? 0)} sub="Conectados ahora" color="border-emerald-500" />
       </div>
     </WidgetWrapper>
   )

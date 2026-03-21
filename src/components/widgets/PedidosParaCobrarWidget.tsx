@@ -24,7 +24,7 @@ export function PedidosParaCobrarWidget() {
       .finally(() => setLoading(false))
   }, [])
 
-  const total = data.reduce((s, p) => s + p.total, 0)
+  const total = (data ?? []).reduce((s, p) => s + (p.total ?? 0), 0)
 
   return (
     <WidgetWrapper
@@ -45,7 +45,7 @@ export function PedidosParaCobrarWidget() {
               <p className="text-xs text-gray-400">Entregado: {p.entregado}</p>
             </div>
             <span className="text-sm font-bold text-green-700 dark:text-green-400 shrink-0">
-              ${p.total.toLocaleString('es-MX')}
+              ${(p.total ?? 0).toLocaleString('es-MX')}
             </span>
             <button onClick={() => navigate(`/pedidos-venta/${p.id}`)} className="text-green-600 hover:text-green-800">
               <ArrowRight size={14} />
