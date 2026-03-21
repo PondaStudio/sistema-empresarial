@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 import { useAuthStore } from '../store/authStore'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://lightcoral-guanaco-765978.hostingersite.com',
+  baseURL: `${import.meta.env.VITE_API_URL || 'https://lightcoral-guanaco-765978.hostingersite.com'}/api`,
   timeout: 30000,
 })
 
