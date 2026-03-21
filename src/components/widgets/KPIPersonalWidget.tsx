@@ -1,7 +1,6 @@
 import { Target } from 'lucide-react'
 import { WidgetWrapper } from './WidgetWrapper'
 import { useState } from 'react'
-import { useAuthStore } from '../../store/authStore'
 
 interface KPIPersonal { ventas_hoy: number; meta_dia: number; ventas_mes: number; meta_mes: number }
 
@@ -10,7 +9,7 @@ const MOCK: KPIPersonal = { ventas_hoy: 8400, meta_dia: 12000, ventas_mes: 68200
 export function KPIPersonalWidget() {
   const [data] = useState<KPIPersonal>(MOCK)
   const [loading] = useState(false)
-  const _user = useAuthStore(s => s.user)
+
 
   const pctDia = Math.min(Math.round((data.ventas_hoy / data.meta_dia) * 100), 100)
   const pctMes = Math.min(Math.round((data.ventas_mes / data.meta_mes) * 100), 100)
