@@ -8,10 +8,25 @@ export default function PerfilPage() {
   const { user, setAuth, token } = useAuthStore()
   const [presencia, setPresencia] = useState<string>(user?.estado_presencia ?? 'disponible')
   const [saving, setSaving] = useState(false)
+  const [numAgente, setNumAgente] = useState<string>(user?.numero_agente ?? '')
+  const [savingAgente, setSavingAgente] = useState(false)
 
   if (!user) return null
 
   const estadoActual = ESTADOS_PRESENCIA.find(e => e.value === presencia)
+
+  async function saveNumAgente() {
+    setSavingAgente(true)
+    try {
+      await api.patch('/users/me', { numero_agente: numAgente.trim() || null })
+      setAuth({ ...user!, numero_agente: numAgente.trim() || null }, token!)
+      toast.success('Número de agente actualizado')
+    } catch {
+      toast.error('Error al actualizar número de agente')
+    } finally {
+      setSavingAgente(false)
+    }
+  }
 
   async function savePresencia(value: string) {
     setSaving(true)
@@ -71,6 +86,30 @@ export default function PerfilPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Número de agente */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Número de agente</h2>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ej. AGT-001"
+            value={numAgente}
+            onChange={e => setNumAgente(e.target.value)}
+          />
+          <button
+            onClick={saveNumAgente}
+            disabled={savingAgente || numAgente === (user?.numero_agente ?? '')}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {savingAgente ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          Este número aparece en los pedidos que generes.
+        </p>
       </div>
 
       <p className="text-xs text-gray-400 text-center">
