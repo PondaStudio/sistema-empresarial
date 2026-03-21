@@ -2,7 +2,7 @@
 
 ## Stack
 - **Frontend:** React + Vite + TailwindCSS
-- **Backend:** Node.js + Express → https://sistema-empresarial-uq1f.onrender.com (Render)
+- **Backend:** Node.js + Express → https://lightcoral-guanaco-765978.hostingersite.com (Hostinger)
 - **Análisis:** Python + FastAPI → mismo servicio Render (proceso separado vía `Procfile`)
 - **Patrón:** Express es el único gateway público; FastAPI es servicio interno llamado por Express
 - **Base de datos y auth:** Supabase
