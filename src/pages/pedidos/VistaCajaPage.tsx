@@ -17,7 +17,7 @@ export default function VistaCajaPage() {
   const [marking, setMarking] = useState(false)
 
   useEffect(() => {
-    api.get('/pedidos/notas?estados=lista_para_cobro')
+    api.get('/pedidos/venta?estados=lista_para_cobro')
       .then(r => {
         const data = Array.isArray(r.data) ? r.data : []
         setNotas(data.length ? data : MOCK_NOTAS.filter(n => n.estado === 'lista_para_cobro'))
@@ -30,7 +30,7 @@ export default function VistaCajaPage() {
     if (!selected) return
     setMarking(true)
     try {
-      await api.patch(`/pedidos/notas/${selected.id}/cobrar`)
+      await api.patch(`/pedidos/venta/${selected.id}/cobrar`)
       toast.success('Nota marcada como cobrada')
     } catch {
       toast.success('Marcada como cobrada (demo)')

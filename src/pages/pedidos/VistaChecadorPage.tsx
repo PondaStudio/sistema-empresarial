@@ -13,7 +13,7 @@ export default function VistaChecadorPage() {
   const [processing, setProcessing] = useState(false)
 
   useEffect(() => {
-    api.get('/pedidos/notas?estados=cobrada,en_revision_salida')
+    api.get('/pedidos/venta?estados=cobrada,en_revision_salida')
       .then(r => {
         const data = Array.isArray(r.data) ? r.data : []
         setNotas(data.length ? data : MOCK_NOTAS.filter(n => ['cobrada', 'en_revision_salida'].includes(n.estado)))
@@ -26,7 +26,7 @@ export default function VistaChecadorPage() {
     if (!selected) return
     setProcessing(true)
     try {
-      await api.patch(`/pedidos/notas/${selected.id}/${endpoint}`)
+      await api.patch(`/pedidos/venta/${selected.id}/${endpoint}`)
       toast.success(label)
     } catch {
       toast.success(`${label} (demo)`)

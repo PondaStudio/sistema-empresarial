@@ -119,7 +119,7 @@ function DetalleNota({ nota, onEstadoChange }: { nota: Nota; onEstadoChange: (id
 
   async function avanzar(endpoint: string, nuevoEstado: EstadoNota, label: string) {
     try {
-      await api.patch(`/pedidos/notas/${nota.id}/${endpoint}`)
+      await api.patch(`/pedidos/venta/${nota.id}/${endpoint}`)
       onEstadoChange(nota.id, nuevoEstado)
       toast.success(label)
     } catch {
@@ -248,7 +248,7 @@ function VistaVendedora() {
   const [isMock, setIsMock] = useState(false)
 
   useEffect(() => {
-    api.get('/pedidos/notas')
+    api.get('/pedidos/venta')
       .then(r => setNotas(Array.isArray(r.data) ? r.data : MOCK_NOTAS))
       .catch(() => { setNotas(MOCK_NOTAS); setIsMock(true) })
       .finally(() => setLoading(false))
@@ -261,7 +261,7 @@ function VistaVendedora() {
 
   async function handleCrear(payload: any) {
     try {
-      const { data } = await api.post('/pedidos/notas', payload)
+      const { data } = await api.post('/pedidos/venta', payload)
       setNotas(prev => [data, ...prev])
       setSelected(data)
     } catch {

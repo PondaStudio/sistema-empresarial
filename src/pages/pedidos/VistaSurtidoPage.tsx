@@ -15,7 +15,7 @@ export default function VistaSurtidoPage() {
   const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string }>>({})
 
   useEffect(() => {
-    api.get('/pedidos/notas?estados=capturada,en_surtido,surtido_parcial')
+    api.get('/pedidos/venta?estados=capturada,en_surtido,surtido_parcial')
       .then(r => {
         const data = Array.isArray(r.data) ? r.data : []
         setNotas(data.length ? data : MOCK_NOTAS.filter(n => ['capturada', 'en_surtido', 'surtido_parcial'].includes(n.estado)))
@@ -47,7 +47,7 @@ export default function VistaSurtidoPage() {
     const nuevoEstado = allSurtido ? 'completa_en_piso' : noneFound ? 'con_incidencia' : 'surtido_parcial'
 
     try {
-      await api.patch(`/pedidos/notas/${selected.id}/surtir`, { items, estado: nuevoEstado })
+      await api.patch(`/pedidos/venta/${selected.id}/surtir`, { items, estado: nuevoEstado })
       toast.success('Surtido guardado')
     } catch {
       toast.success('Surtido guardado (demo)')
