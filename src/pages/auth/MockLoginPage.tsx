@@ -84,11 +84,11 @@ function generatePermisos(nivel: number): Permisos {
       acciones: ['VER','CREAR'],
     },
     10: {
-      modulos: ['dashboard','inventario','comunicacion','avisos','notificaciones'],
+      modulos: ['dashboard','pedidos_venta','clientes','avisos','notificaciones'],
       acciones: ['VER','CREAR'],
     },
     11: {
-      modulos: ['dashboard','pedidos_venta','clientes','catalogo','avisos','notificaciones'],
+      modulos: ['dashboard','pedidos_venta','clientes','avisos','notificaciones'],
       acciones: ['VER','CREAR'],
     },
     12: {

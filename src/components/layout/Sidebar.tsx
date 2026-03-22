@@ -10,7 +10,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { path: '/dashboard',      label: 'Dashboard',     icon: '📊', modulo: 'dashboard' },
-  { path: '/pedidos/venta',  label: 'Pedidos',        icon: '🛒', modulo: 'pedidos_venta' },
+  { path: '/pedidos',        label: 'Pedidos',        icon: '🛒', modulo: 'pedidos_venta' },
   { path: '/clientes',       label: 'Clientes',       icon: '🧑‍💼', modulo: 'clientes' },
   { path: '/inventario',     label: 'Inventario',     icon: '📦', modulo: 'inventario' },
   { path: '/proveedores',    label: 'Proveedores',    icon: '🏭', modulo: 'proveedores' },
