@@ -415,8 +415,10 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
       facturacion,
       descuento_especial: descuento ? 100 : undefined,
       items: items.map(it => ({
-        producto_id: it.producto_id,
+        codigo:      it.codigo,
+        nombre:      it.nombre || it.codigo,
         cantidad:    it.cantidad,
+        producto_id: it.producto_id || null,
       })),
     }
     console.log('[NuevaNota] body enviado:', JSON.stringify(body))
