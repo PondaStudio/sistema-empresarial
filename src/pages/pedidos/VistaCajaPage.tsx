@@ -18,10 +18,7 @@ export default function VistaCajaPage() {
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=lista_para_cobro')
-      .then(r => {
-        const data = Array.isArray(r.data) ? r.data : []
-        setNotas(data.length ? data : MOCK_NOTAS.filter(n => n.estado === 'lista_para_cobro'))
-      })
+      .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
       .catch(() => setNotas(MOCK_NOTAS.filter(n => n.estado === 'lista_para_cobro')))
       .finally(() => setLoading(false))
   }, [])

@@ -14,10 +14,7 @@ export default function VistaChecadorPage() {
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=cobrada,en_revision_salida')
-      .then(r => {
-        const data = Array.isArray(r.data) ? r.data : []
-        setNotas(data.length ? data : MOCK_NOTAS.filter(n => ['cobrada', 'en_revision_salida'].includes(n.estado)))
-      })
+      .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
       .catch(() => setNotas(MOCK_NOTAS.filter(n => ['cobrada', 'en_revision_salida'].includes(n.estado))))
       .finally(() => setLoading(false))
   }, [])

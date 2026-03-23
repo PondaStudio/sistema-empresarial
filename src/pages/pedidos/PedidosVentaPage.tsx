@@ -249,7 +249,7 @@ function VistaVendedora() {
 
   useEffect(() => {
     api.get('/pedidos/venta')
-      .then(r => setNotas(Array.isArray(r.data) ? r.data : MOCK_NOTAS))
+      .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
       .catch(() => { setNotas(MOCK_NOTAS); setIsMock(true) })
       .finally(() => setLoading(false))
   }, [])
@@ -289,7 +289,7 @@ function VistaVendedora() {
 
   // Filter: vendedoras see only their own, supervisors see all
   const notasVisibles = nivel >= 10
-    ? notas.filter(n => n.vendedora_id === userId || isMock)
+    ? notas.filter(n => n.vendedora_id === userId)
     : notas
 
   if (loading) return (

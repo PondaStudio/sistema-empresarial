@@ -16,10 +16,7 @@ export default function VistaSurtidoPage() {
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=capturada,en_surtido,surtido_parcial')
-      .then(r => {
-        const data = Array.isArray(r.data) ? r.data : []
-        setNotas(data.length ? data : MOCK_NOTAS.filter(n => ['capturada', 'en_surtido', 'surtido_parcial'].includes(n.estado)))
-      })
+      .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
       .catch(() => setNotas(MOCK_NOTAS.filter(n => ['capturada', 'en_surtido', 'surtido_parcial'].includes(n.estado))))
       .finally(() => setLoading(false))
   }, [])
