@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import type { Permisos } from '../../types'
 import { getInitials } from '../../utils/strings'
+import api from '../../services/api'
 
 interface MockUser {
   id: string
@@ -128,6 +129,23 @@ export default function MockLoginPage() {
       token: `mock-${user.id}`,
       permisos: generatePermisos(user.nivel),
     })
+
+    // Cargar perfil real desde backend (numero_agente, foto, etc.)
+    api.get('/users/me').then(r => {
+      const perfil = r.data
+      const current = useAuthStore.getState()
+      if (current.user) {
+        useAuthStore.setState({
+          user: {
+            ...current.user,
+            numero_agente: perfil.numero_agente ?? current.user.numero_agente,
+            foto_url:      perfil.foto_url      ?? current.user.foto_url,
+            sucursal_id:   perfil.sucursal_id   ?? current.user.sucursal_id,
+          },
+        })
+      }
+    }).catch(() => { /* sin conexión, usar datos mock */ })
+
     navigate('/dashboard')
   }
 
