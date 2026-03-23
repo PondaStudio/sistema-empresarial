@@ -370,31 +370,43 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     }, 350)
   }
 
-  async function buscarCodigo(idx: number, codigo: string) {
-    setItems(p => p.map((it, i) => i === idx ? { ...it, codigo: codigo.toUpperCase(), buscando: true } : it))
-    if (codigo.length < 3) {
-      setItems(p => p.map((it, i) => i === idx ? { ...it, buscando: false } : it))
-      return
-    }
-    try {
-      const { data } = await api.get(`/productos?codigo=${encodeURIComponent(codigo)}`)
-      const prod = Array.isArray(data) ? data[0] : data
-      setItems(p => p.map((it, i) => i === idx
-        ? { ...it, nombre: prod?.nombre ?? prod?.descripcion ?? '', producto_id: prod?.id ?? codigo, buscando: false }
-        : it
-      ))
-    } catch {
-      setItems(p => p.map((it, i) => i === idx ? { ...it, buscando: false } : it))
-    }
+  const codigoTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
+
+  function buscarCodigo(idx: number, codigo: string) {
+    const upper = codigo.toUpperCase()
+    setItems(p => p.map((it, i) => i === idx ? { ...it, codigo: upper, buscando: false } : it))
+
+    clearTimeout(codigoTimers.current[idx])
+    if (upper.length < 3) return
+
+    setItems(p => p.map((it, i) => i === idx ? { ...it, buscando: true } : it))
+
+    codigoTimers.current[idx] = setTimeout(async () => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 2000)
+      try {
+        const { data } = await api.get(`/productos?codigo=${encodeURIComponent(upper)}`, { signal: controller.signal })
+        const prod = Array.isArray(data) ? data[0] : null
+        setItems(p => p.map((it, i) => {
+          if (i !== idx) return it
+          return prod
+            ? { ...it, nombre: prod.nombre ?? prod.descripcion ?? '', producto_id: prod.id, buscando: false }
+            : { ...it, buscando: false } // sin resultados → deja nombre editable, sin producto_id
+        }))
+      } catch {
+        setItems(p => p.map((it, i) => i === idx ? { ...it, buscando: false } : it))
+      } finally {
+        clearTimeout(timeout)
+      }
+    }, 400)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cliente.trim()) { toast.error('Ingresa el cliente'); return }
     if (items.some(it => !it.codigo.trim())) { toast.error('Todos los productos deben tener código'); return }
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    if (items.some(it => !it.producto_id || !UUID_RE.test(it.producto_id))) {
-      toast.error('Espera a que se cargue la descripción de cada producto'); return
+    if (items.some(it => it.buscando)) {
+      toast.error('Espera a que terminen de cargar los productos'); return
     }
     setSubmitting(true)
     const body = {
