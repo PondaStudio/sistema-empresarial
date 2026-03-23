@@ -18,7 +18,7 @@ export function PedidosParaCobrarWidget() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/pedidos-venta/listos-cobro')
+    api.get('/pedidos/venta?estado=lista_para_cobro')
       .then(r => setData(Array.isArray(r.data) ? r.data : MOCK))
       .catch(() => setData(MOCK))
       .finally(() => setLoading(false))
@@ -47,7 +47,7 @@ export function PedidosParaCobrarWidget() {
             <span className="text-sm font-bold text-green-700 dark:text-green-400 shrink-0">
               ${(p.total ?? 0).toLocaleString('es-MX')}
             </span>
-            <button onClick={() => navigate(`/pedidos-venta/${p.id}`)} className="text-green-600 hover:text-green-800">
+            <button onClick={() => navigate('/pedidos/caja')} className="text-green-600 hover:text-green-800">
               <ArrowRight size={14} />
             </button>
           </div>

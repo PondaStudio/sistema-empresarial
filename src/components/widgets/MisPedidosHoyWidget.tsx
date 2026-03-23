@@ -23,7 +23,7 @@ export function MisPedidosHoyWidget() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/pedidos-venta/hoy')
+    api.get('/pedidos/venta?estado=capturada')
       .then(r => setData(Array.isArray(r.data) ? r.data : MOCK))
       .catch(() => setData(MOCK))
       .finally(() => setLoading(false))

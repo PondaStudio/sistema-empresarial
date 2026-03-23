@@ -18,7 +18,7 @@ export function ColaPedidosWidget() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/pedidos-venta/cola-surtido')
+    api.get('/pedidos/venta?estados=capturada,en_surtido,surtido_parcial')
       .then(r => setData(Array.isArray(r.data) ? r.data : MOCK))
       .catch(() => setData(MOCK))
       .finally(() => setLoading(false))
@@ -43,7 +43,7 @@ export function ColaPedidosWidget() {
               <p className="text-xs font-medium text-gray-900 dark:text-white">{p.id} · {p.cliente}</p>
               <p className="text-xs text-gray-400">{p.productos} productos · {p.creado}</p>
             </div>
-            <button onClick={() => navigate(`/pedidos-venta/${p.id}`)} className="text-blue-500 hover:text-blue-700">
+            <button onClick={() => navigate('/pedidos/surtido')} className="text-blue-500 hover:text-blue-700">
               <ArrowRight size={14} />
             </button>
           </div>

@@ -15,7 +15,7 @@ export function NuevoPedidoWidget() {
     >
       <div className="flex flex-col items-center justify-center py-4 gap-4">
         <button
-          onClick={() => navigate('/pedidos-venta/nuevo')}
+          onClick={() => navigate('/pedidos/venta')}
           className="w-full bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-2xl p-6 flex flex-col items-center gap-2 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
         >
           <Plus size={36} strokeWidth={2.5} />

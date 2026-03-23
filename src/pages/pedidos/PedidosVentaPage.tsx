@@ -339,7 +339,7 @@ function VistaCajaInline() {
 }
 
 // ─── Modal Nueva Nota ─────────────────────────────────────────────────────────
-interface ItemForm { codigo: string; nombre: string; cantidad: number; buscando: boolean }
+interface ItemForm { codigo: string; nombre: string; cantidad: number; buscando: boolean; producto_id?: string }
 
 function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d: any) => void }) {
   const user = useAuthStore(s => s.user)
@@ -392,13 +392,23 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     e.preventDefault()
     if (!cliente.trim()) { toast.error('Ingresa el cliente'); return }
     if (items.some(it => !it.codigo.trim())) { toast.error('Todos los productos deben tener código'); return }
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (items.some(it => !it.producto_id || !UUID_RE.test(it.producto_id))) {
+      toast.error('Espera a que se cargue la descripción de cada producto'); return
+    }
     setSubmitting(true)
-    await onSubmit({
-      nombre_cliente: cliente,
-      numero_agente: user?.numero_agente,
-      notas, facturacion, descuento_especial: descuento,
-      items: items.map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad })),
-    })
+    const body = {
+      nombre_cliente:    cliente,
+      notas:             notas || undefined,
+      facturacion,
+      descuento_especial: descuento ? 100 : undefined,
+      items: items.map(it => ({
+        producto_id: it.producto_id,
+        cantidad:    it.cantidad,
+      })),
+    }
+    console.log('[NuevaNota] body enviado:', JSON.stringify(body))
+    await onSubmit(body)
     setSubmitting(false)
   }
 
