@@ -10,6 +10,7 @@ export default function VistaChecadorPage() {
   const [selected, setSelected] = useState<Nota | null>(null)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [processing, setProcessing] = useState(false)
 
   useEffect(() => {
@@ -18,6 +19,18 @@ export default function VistaChecadorPage() {
       .catch(() => setNotas(MOCK_NOTAS.filter(n => ['cobrada', 'en_revision_salida'].includes(n.estado))))
       .finally(() => setLoading(false))
   }, [])
+
+  async function seleccionarNota(nota: Nota) {
+    setLoadingDetalle(true)
+    try {
+      const { data } = await api.get(`/pedidos/venta/${nota.id}`)
+      setSelected(data)
+    } catch {
+      setSelected(nota)
+    } finally {
+      setLoadingDetalle(false)
+    }
+  }
 
   async function avanzar(endpoint: string, nuevoEstado: 'en_revision_salida' | 'cerrada', label: string) {
     if (!selected) return
@@ -64,7 +77,7 @@ export default function VistaChecadorPage() {
           {notasFiltradas.map(n => {
             const est = ESTADO_LABELS[n.estado] ?? ESTADO_LABELS.cobrada
             return (
-              <button key={n.id} onClick={() => setSelected(n)}
+              <button key={n.id} onClick={() => seleccionarNota(n)} disabled={loadingDetalle}
                 className={`w-full text-left p-3 rounded-xl border transition-all ${
                   selected?.id === n.id
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
@@ -86,7 +99,12 @@ export default function VistaChecadorPage() {
 
       {/* Detalle */}
       <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
-        {!selected ? (
+        {loadingDetalle ? (
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+            <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm">Cargando detalle...</p>
+          </div>
+        ) : !selected ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <ScanLine size={40} strokeWidth={1} />
             <p>Selecciona o escanea una nota para revisar</p>

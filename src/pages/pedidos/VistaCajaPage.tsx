@@ -14,6 +14,7 @@ export default function VistaCajaPage() {
   const [selected, setSelected] = useState<Nota | null>(null)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [marking, setMarking] = useState(false)
 
   useEffect(() => {
@@ -22,6 +23,18 @@ export default function VistaCajaPage() {
       .catch(() => setNotas(MOCK_NOTAS.filter(n => n.estado === 'lista_para_cobro')))
       .finally(() => setLoading(false))
   }, [])
+
+  async function seleccionarNota(nota: Nota) {
+    setLoadingDetalle(true)
+    try {
+      const { data } = await api.get(`/pedidos/venta/${nota.id}`)
+      setSelected(data)
+    } catch {
+      setSelected(nota)
+    } finally {
+      setLoadingDetalle(false)
+    }
+  }
 
   async function marcarCobrada() {
     if (!selected) return
@@ -69,7 +82,7 @@ export default function VistaCajaPage() {
             <p className="text-xs text-gray-400 text-center py-6">Sin notas para cobrar</p>
           )}
           {notasFiltradas.map(n => (
-            <button key={n.id} onClick={() => setSelected(n)}
+            <button key={n.id} onClick={() => seleccionarNota(n)} disabled={loadingDetalle}
               className={`w-full text-left p-3 rounded-xl border transition-all ${
                 selected?.id === n.id
                   ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
@@ -87,7 +100,12 @@ export default function VistaCajaPage() {
       </div>
 
       {/* Panel derecho — detalle + CONTPAQi */}
-      {!selected ? (
+      {loadingDetalle ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-2">
+          <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm">Cargando detalle...</p>
+        </div>
+      ) : !selected ? (
         <div className="flex-1 flex items-center justify-center text-gray-400">
           <div className="text-center space-y-2">
             <CreditCard size={40} strokeWidth={1} />
