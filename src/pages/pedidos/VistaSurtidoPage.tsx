@@ -15,7 +15,7 @@ export default function VistaSurtidoPage() {
   const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string }>>({})
 
   useEffect(() => {
-    api.get('/pedidos/venta?estados=capturada,en_surtido,surtido_parcial')
+    api.get('/pedidos/venta?estados=capturada,en_surtido,surtido_parcial,completa_en_piso')
       .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
       .catch(() => setNotas(MOCK_NOTAS.filter(n => ['capturada', 'en_surtido', 'surtido_parcial'].includes(n.estado))))
       .finally(() => setLoading(false))
@@ -146,7 +146,7 @@ export default function VistaSurtidoPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {selected.items.map(item => {
+                  {(selected.items ?? []).map(item => {
                     const loc = surtidoLocal[item.id] ?? { cantidad: item.cantidad_surtida ?? 0, estado: item.estado_item }
                     return (
                       <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">

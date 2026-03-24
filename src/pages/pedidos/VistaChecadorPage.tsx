@@ -135,7 +135,7 @@ export default function VistaChecadorPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {selected.items.map(item => (
+                  {(selected.items ?? []).map(item => (
                     <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                       <td className="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
                       <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.nombre}</td>

@@ -212,7 +212,7 @@ function DetalleNota({ nota, onEstadoChange }: { nota: Nota; onEstadoChange: (id
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {nota.items.map(item => (
+            {(nota.items ?? []).map(item => (
               <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                 <td className="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
                 <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.nombre}</td>
@@ -261,9 +261,10 @@ function VistaVendedora() {
 
   async function handleCrear(payload: any) {
     try {
-      const { data } = await api.post('/pedidos/venta', payload)
-      setNotas(prev => [data, ...prev])
-      setSelected(data)
+      await api.post('/pedidos/venta', payload)
+      const r = await api.get('/pedidos/venta')
+      setNotas(Array.isArray(r.data) ? r.data : [])
+      toast.success('Nota creada')
     } catch {
       const nueva: Nota = {
         id: `mock-${Date.now()}`, folio: `PV-${Date.now().toString().slice(-8)}`,
