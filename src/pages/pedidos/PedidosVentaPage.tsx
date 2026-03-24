@@ -413,7 +413,7 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
       nombre_cliente:    cliente,
       notas:             notas || undefined,
       facturacion,
-      descuento_especial: descuento ? 100 : undefined,
+      descuento_especial: descuento,
       items: items.map(it => ({
         codigo:      it.codigo,
         nombre:      it.nombre || it.codigo,
