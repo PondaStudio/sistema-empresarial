@@ -102,7 +102,7 @@ export default function VistaSurtidoPage() {
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${est.color}`}>{est.label}</span>
                 </div>
                 <p className="text-xs text-gray-800 dark:text-white truncate">{n.nombre_cliente}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">{n.items.length} productos · {n.vendedora?.nombre}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">{(n.items ?? []).length} productos · {n.vendedora?.nombre}</p>
               </button>
             )
           })}

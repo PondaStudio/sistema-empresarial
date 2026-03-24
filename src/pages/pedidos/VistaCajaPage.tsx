@@ -80,7 +80,7 @@ export default function VistaCajaPage() {
                 {n.facturacion && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Factura</span>}
               </div>
               <p className="text-xs text-gray-800 dark:text-white truncate">{n.nombre_cliente}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">{n.items.length} productos · Agente: {n.vendedora?.numero_agente ?? '—'}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{(n.items ?? []).length} productos · Agente: {n.vendedora?.numero_agente ?? '—'}</p>
             </button>
           ))}
         </div>
