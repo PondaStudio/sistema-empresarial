@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { Plus, ChevronRight, Clock, CheckCircle2, X, Search } from 'lucide-react'
+import { Plus, ChevronRight, Clock, CheckCircle2, X, Search, Pencil, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
@@ -113,9 +113,30 @@ function ListaNotas({
 }
 
 // ─── Detalle de nota ──────────────────────────────────────────────────────────
-function DetalleNota({ nota, onEstadoChange }: { nota: Nota; onEstadoChange: (id: string, estado: EstadoNota) => void }) {
+function DetalleNota({ nota, onEstadoChange, onDelete, onEdited }: {
+  nota: Nota
+  onEstadoChange: (id: string, estado: EstadoNota) => void
+  onDelete: (id: string) => void
+  onEdited: (nota: Nota) => void
+}) {
   const nivel = useAuthStore(s => s.user?.roles?.nivel ?? 99)
+  const puedeModificar = nivel <= 2 || nivel === 4
   const est = ESTADO_LABELS[nota.estado] ?? ESTADO_LABELS.capturada
+  const [showEdit, setShowEdit] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete() {
+    if (!confirm(`¿Eliminar la nota ${nota.folio}? Esta acción no se puede deshacer.`)) return
+    setDeleting(true)
+    try {
+      await api.delete(`/pedidos/venta/${nota.id}`)
+      toast.success('Nota eliminada')
+      onDelete(nota.id)
+    } catch {
+      toast.error('Error al eliminar')
+      setDeleting(false)
+    }
+  }
 
   async function avanzar(endpoint: string, nuevoEstado: EstadoNota, label: string) {
     try {
@@ -153,8 +174,23 @@ function DetalleNota({ nota, onEstadoChange }: { nota: Nota; onEstadoChange: (id
               <CheckCircle2 size={14} /> Validar en piso
             </button>
           )}
+          {puedeModificar && (
+            <>
+              <button onClick={() => setShowEdit(true)}
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5">
+                <Pencil size={14} /> Editar
+              </button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors flex items-center gap-1.5 disabled:opacity-60">
+                <Trash2 size={14} /> {deleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </>
+          )}
         </div>
       </div>
+      {showEdit && (
+        <EditarNotaModal nota={nota} onClose={() => setShowEdit(false)} onSaved={updated => { onEdited(updated); setShowEdit(false) }} />
+      )}
 
       {/* QR si tiene */}
       {(nota.estado === 'lista_para_cobro' || nota.qr_code) && (
@@ -323,7 +359,12 @@ function VistaVendedora() {
             <p>Selecciona una nota para ver el detalle</p>
           </div>
         ) : (
-          <DetalleNota nota={selected} onEstadoChange={handleEstadoChange} />
+          <DetalleNota
+            nota={selected}
+            onEstadoChange={handleEstadoChange}
+            onDelete={id => { setNotas(prev => prev.filter(n => n.id !== id)); setSelected(null) }}
+            onEdited={updated => { setNotas(prev => prev.map(n => n.id === updated.id ? updated : n)); setSelected(updated) }}
+          />
         )}
       </div>
 
@@ -548,6 +589,74 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
             <button type="submit" disabled={submitting}
               className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors font-semibold">
               {submitting ? 'Creando...' : 'Crear nota'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal Editar Nota ────────────────────────────────────────────────────────
+function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () => void; onSaved: (updated: Nota) => void }) {
+  const [cliente, setCliente] = useState(nota.nombre_cliente)
+  const [notasVal, setNotasVal] = useState(nota.notas ?? '')
+  const [facturacion, setFacturacion] = useState(nota.facturacion ?? false)
+  const [descuento, setDescuento] = useState(nota.descuento_especial ?? false)
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!cliente.trim()) { toast.error('El cliente es requerido'); return }
+    setSaving(true)
+    const body = { nombre_cliente: cliente, notas: notasVal || undefined, facturacion, descuento_especial: descuento }
+    try {
+      await api.patch(`/pedidos/venta/${nota.id}`, body)
+      toast.success('Nota actualizada')
+      onSaved({ ...nota, ...body })
+    } catch {
+      toast.error('Error al guardar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const inputCls = 'w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">Editar {nota.folio}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
+            <input className={inputCls} value={cliente} onChange={e => setCliente(e.target.value)} required />
+          </div>
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+              <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+              Requiere factura
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+              <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+              Descuento especial
+            </label>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+            <textarea className={`${inputCls} resize-none`} rows={2} value={notasVal} onChange={e => setNotasVal(e.target.value)} />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose}
+              className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors font-semibold">
+              {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
         </form>
