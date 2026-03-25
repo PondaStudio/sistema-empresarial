@@ -5,7 +5,8 @@ export type EstadoNota =
   | 'completa_en_piso'
   | 'lista_para_cobro'
   | 'cobrada'
-  | 'en_revision_salida'
+  | 'checada_en_piso'
+  | 'checada_en_salida'
   | 'cerrada'
   | 'cancelada'
   | 'con_incidencia'
@@ -46,16 +47,17 @@ export const ESTADO_LABELS: Record<EstadoNota | string, { label: string; color: 
   surtido_parcial:     { label: 'Surtido parcial',    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400', step: 3 },
   completa_en_piso:    { label: 'Completa en piso',   color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',        step: 4 },
   lista_para_cobro:    { label: 'Lista para cobro',   color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400', step: 5 },
-  cobrada:             { label: 'Cobrada',             color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',       step: 6 },
-  en_revision_salida:  { label: 'En revisión salida', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400', step: 7 },
-  cerrada:             { label: 'Cerrada ✓',          color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',    step: 8 },
+  cobrada:             { label: 'Cobrada',             color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',         step: 6 },
+  checada_en_piso:     { label: 'Checada en piso',    color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400',  step: 7 },
+  checada_en_salida:   { label: 'Checada en salida',  color: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400',  step: 8 },
+  cerrada:             { label: 'Cerrada ✓',          color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',      step: 9 },
   cancelada:           { label: 'Cancelada',           color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',           step: 0 },
   con_incidencia:      { label: 'Con incidencia',      color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',       step: 0 },
 }
 
 export const FLUJO_ESTADOS: EstadoNota[] = [
   'capturada', 'en_surtido', 'surtido_parcial', 'completa_en_piso',
-  'lista_para_cobro', 'cobrada', 'en_revision_salida', 'cerrada',
+  'lista_para_cobro', 'cobrada', 'checada_en_piso', 'checada_en_salida', 'cerrada',
 ]
 
 // MOCK DATA

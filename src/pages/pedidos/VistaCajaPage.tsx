@@ -233,25 +233,37 @@ export default function VistaCajaPage() {
             <p>Selecciona una nota para procesar el cobro</p>
           </div>
         </div>
-      ) : fijo ? (
-        /* Placeholder cuando el panel está fijo */
-        <div className="flex-1 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-          <div className="text-center space-y-1">
-            <Pin size={28} strokeWidth={1} className="mx-auto text-amber-400" />
-            <p className="text-sm">Panel fijo activo</p>
-            <p className="text-xs">El panel está flotando en la esquina derecha</p>
-          </div>
-        </div>
       ) : (
         <div className="flex-1 min-h-0">
           <PanelDetalle />
         </div>
       )}
 
-      {/* Panel flotante fijo */}
+      {/* Modo Caja — pantalla completa */}
       {selected && fijo && (
-        <div className="fixed bottom-4 right-4 w-[480px] max-h-[85vh] z-50 shadow-2xl rounded-xl overflow-hidden flex flex-col border border-gray-200 dark:border-gray-600">
-          <PanelDetalle />
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+          {/* Barra superior con botones de cierre */}
+          <div className="flex items-center justify-between px-4 py-2 bg-green-600 text-white shrink-0">
+            <span className="font-semibold text-sm flex items-center gap-2">
+              <Pin size={14} /> Modo Caja — {selected.nombre_cliente}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setFijo(false); marcarCobrada() }}
+                disabled={marking}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white text-green-700 rounded-lg font-semibold hover:bg-green-50 disabled:opacity-60 transition-colors">
+                <CheckCircle2 size={12} /> Cerrar y marcar cobrada
+              </button>
+              <button
+                onClick={() => setFijo(false)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-700 rounded-lg hover:bg-green-800 transition-colors">
+                ✕ Solo cerrar panel
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <PanelDetalle />
+          </div>
         </div>
       )}
     </div>

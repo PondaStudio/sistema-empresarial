@@ -24,6 +24,7 @@ export interface Usuario {
   foto_url?: string | null
   activo: boolean
   numero_agente?: string | null
+  subtipo?: string | null
   roles?: Pick<Rol, 'nivel' | 'nombre'>
   sucursales?: Pick<Sucursal, 'nombre'>
 }

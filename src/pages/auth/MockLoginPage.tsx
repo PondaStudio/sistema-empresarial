@@ -13,6 +13,7 @@ interface MockUser {
   rol: string
   gradiente: string
   icon: string
+  subtipo?: string
 }
 
 const MOCK_USERS: MockUser[] = [
@@ -26,6 +27,8 @@ const MOCK_USERS: MockUser[] = [
   { id: '343067c0-5e23-4e22-bce4-ff6f487375e3', nombre: 'Pedro Admin',        email: 'admg1@empresa.com',       rol_id: 'rol-08', nivel: 7,  rol: 'Administrador G1',       gradiente: 'from-lime-500 via-lime-700 to-lime-900',       icon: '🗂️' },
   { id: 'bb634c06-9920-4ff8-8cc6-e0cd22757af8', nombre: 'Laura Cajera',       email: 'cajera@empresa.com',      rol_id: 'rol-09', nivel: 8,  rol: 'Cajera',                 gradiente: 'from-amber-500 via-amber-600 to-amber-800',    icon: '💰' },
   { id: 'd99b43d7-134f-4878-891f-34f539626758', nombre: 'Miguel Almacenista', email: 'almacenista@empresa.com', rol_id: 'rol-10', nivel: 9,  rol: 'Almacenista G1',         gradiente: 'from-orange-500 via-orange-700 to-orange-900', icon: '🏗️' },
+  { id: 'f1a2b3c4-0001-4000-a000-000000000001', nombre: 'Carlos Checador Escáner', email: 'checador1@empresa.com', rol_id: 'rol-10', nivel: 9, rol: 'Checador Escáner', gradiente: 'from-indigo-500 via-indigo-700 to-indigo-900', icon: '📷', subtipo: 'checador_escaner' },
+  { id: 'f1a2b3c4-0002-4000-a000-000000000002', nombre: 'Pedro Checador Rápido',  email: 'checador2@empresa.com', rol_id: 'rol-10', nivel: 9, rol: 'Checador Rápido',  gradiente: 'from-violet-500 via-violet-700 to-violet-900', icon: '⚡', subtipo: 'checador_rapido' },
   { id: '45a6c286-7ba6-4425-91d9-5e8fd108db9e', nombre: 'Sofia Vendedora',    email: 'vendedora@empresa.com',   rol_id: 'rol-11', nivel: 10, rol: 'Vendedora',              gradiente: 'from-rose-500 via-rose-700 to-rose-900',       icon: '🛍️' },
   { id: '3d330838-ba39-4fed-97a6-d9521327ea6a', nombre: 'Diego Promotor',     email: 'promotor@empresa.com',    rol_id: 'rol-12', nivel: 11, rol: 'Promotor de Marca',      gradiente: 'from-red-500 via-red-700 to-red-900',          icon: '📣' },
 ]
@@ -33,7 +36,7 @@ const MOCK_USERS: MockUser[] = [
 const GRUPOS = [
   { label: 'Alta Dirección',  color: 'text-blue-300',    indices: [1, 2, 3, 4] },
   { label: 'Operaciones',     color: 'text-emerald-300', indices: [5, 6, 7, 8] },
-  { label: 'Campo',           color: 'text-orange-300',  indices: [9, 10, 11] },
+  { label: 'Campo',           color: 'text-orange-300',  indices: [9, 10, 11, 12, 13] },
 ]
 
 function generatePermisos(nivel: number): Permisos {
@@ -124,6 +127,7 @@ export default function MockLoginPage() {
         estado_presencia: 'disponible',
         foto_url: null,
         activo: true,
+        subtipo: user.subtipo ?? null,
         roles: { nivel: user.nivel, nombre: user.rol },
       },
       token: `mock-${user.id}`,

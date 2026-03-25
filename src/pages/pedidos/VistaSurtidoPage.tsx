@@ -4,7 +4,8 @@ import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { Nota, ESTADO_LABELS, MOCK_NOTAS } from './types'
 
-const ESTADOS_ITEM = ['pendiente', 'surtido', 'no_encontrado', 'surtido_parcial'] as const
+const ESTADOS_ITEM = ['pendiente', 'surtido', 'no_disponible', 'surtido_parcial'] as const
+const AREAS_DEFAULT = ['A', 'B', 'C', 'D']
 
 export default function VistaSurtidoPage() {
   const [notas, setNotas] = useState<Nota[]>([])
@@ -13,7 +14,17 @@ export default function VistaSurtidoPage() {
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
-  const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string }>>({})
+  const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string; area: string }>>({})
+  const [areas, setAreas] = useState<string[]>(AREAS_DEFAULT)
+
+  useEffect(() => {
+    api.get('/areas-bodega')
+      .then(r => {
+        const lista = Array.isArray(r.data) ? r.data.map((a: any) => a.nombre ?? a) : []
+        if (lista.length > 0) setAreas(lista)
+      })
+      .catch(() => { /* usar default */ })
+  }, [])
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=capturada,en_surtido,surtido_parcial,completa_en_piso')
@@ -27,9 +38,9 @@ export default function VistaSurtidoPage() {
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       const detalle: Nota = data
-      const init: Record<string, { cantidad: number; estado: string }> = {}
+      const init: Record<string, { cantidad: number; estado: string; area: string }> = {}
       ;(detalle.items ?? []).forEach(it => {
-        init[it.id] = { cantidad: it.cantidad_surtida ?? 0, estado: it.estado_item }
+        init[it.id] = { cantidad: it.cantidad_surtida ?? 0, estado: it.estado_item ?? 'pendiente', area: it.area ?? '' }
       })
       setSurtidoLocal(init)
       setSelected(detalle)
@@ -64,6 +75,7 @@ export default function VistaSurtidoPage() {
         await api.patch(`/pedidos/venta/${selected.id}/surtir-item/${it.id}`, {
           cantidad_surtida:    it.cantidad_surtida,
           estado_confirmacion: it.estado_confirmacion,
+          area:                surtidoLocal[it.id]?.area || undefined,
         })
       } catch (err: any) {
         console.error('[guardarSurtido] error en item', it.id, err?.response?.data ?? err?.message)
@@ -179,7 +191,7 @@ export default function VistaSurtidoPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {(selected.items ?? []).map(item => {
-                    const loc = surtidoLocal[item.id] ?? { cantidad: item.cantidad_surtida ?? 0, estado: item.estado_item }
+                    const loc = surtidoLocal[item.id] ?? { cantidad: item.cantidad_surtida ?? 0, estado: item.estado_item ?? 'pendiente', area: item.area ?? '' }
                     return (
                       <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                         <td className="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
@@ -196,7 +208,16 @@ export default function VistaSurtidoPage() {
                             className="w-16 px-2 py-1 text-sm text-center border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-3 py-2 text-center text-xs text-gray-500">{item.area ?? '—'}</td>
+                        <td className="px-3 py-2 text-center">
+                          <select
+                            value={loc.area}
+                            onChange={e => setSurtidoLocal(prev => ({ ...prev, [item.id]: { ...loc, area: e.target.value } }))}
+                            className="text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">—</option>
+                            {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                          </select>
+                        </td>
                         <td className="px-3 py-2 text-center">
                           <select
                             value={loc.estado}
