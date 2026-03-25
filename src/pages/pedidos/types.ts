@@ -16,9 +16,10 @@ export interface ItemNota {
   codigo: string
   nombre: string
   cantidad: number
-  cantidad_surtida?: number
-  estado_item: 'pendiente' | 'surtido' | 'no_encontrado' | 'surtido_parcial'
-  area?: string
+  cantidad_surtida?: number | null
+  estado_item?: string | null
+  area?: string | null
+  incidencia?: string | null
 }
 
 export interface Nota {
