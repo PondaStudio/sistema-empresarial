@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
-import { Plus, ChevronRight, Clock, CheckCircle2, X, Search, Pencil, Trash2 } from 'lucide-react'
+import { Plus, ChevronRight, Clock, CheckCircle2, X, Search, Pencil, Trash2, Printer } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import { Nota, EstadoNota, ESTADO_LABELS, FLUJO_ESTADOS, MOCK_NOTAS } from './types'
 import { QRCodeDisplay } from '../../components/pedidos/QRCodeDisplay'
+import { imprimirNota } from '../../components/pedidos/TicketImpresion'
 
 // ─── Role router ─────────────────────────────────────────────────────────────
 export default function PedidosVentaPage() {
@@ -172,6 +173,18 @@ function DetalleNota({ nota, onEstadoChange, onDelete, onEdited }: {
             <button onClick={() => avanzar('validar-piso', 'lista_para_cobro', 'Validado en piso')}
               className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1.5">
               <CheckCircle2 size={14} /> Validar en piso
+            </button>
+          )}
+          {(nota.estado === 'completa_en_piso' || nota.estado === 'lista_para_cobro') && nivel >= 10 && (
+            <button
+              onClick={async () => {
+                if (nota.estado === 'completa_en_piso') {
+                  await avanzar('validar-piso', 'lista_para_cobro', 'Validado en piso')
+                }
+                imprimirNota(nota)
+              }}
+              className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 transition-colors flex items-center gap-1.5">
+              <Printer size={14} /> Imprimir nota
             </button>
           )}
           {puedeModificar && (
