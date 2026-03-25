@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, Copy, CheckCircle2, CreditCard, Pin, PinOff } from 'lucide-react'
+import { Search, Copy, CheckCircle2, CreditCard, ExternalLink } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { Nota, MOCK_NOTAS } from './types'
@@ -19,7 +19,6 @@ export default function VistaCajaPage() {
   const [loading, setLoading] = useState(true)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [marking, setMarking] = useState(false)
-  const [fijo, setFijo] = useState(false)
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=lista_para_cobro')
@@ -55,7 +54,6 @@ export default function VistaCajaPage() {
     }
     setNotas(prev => prev.filter(n => n.id !== selected.id))
     setSelected(null)
-    setFijo(false)
     setMarking(false)
   }
 
@@ -82,15 +80,10 @@ export default function VistaCajaPage() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setFijo(f => !f)}
-              title={fijo ? 'Desfijar panel' : 'Fijar panel flotante'}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                fijo
-                  ? 'bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400'
-                  : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}>
-              {fijo ? <PinOff size={12} /> : <Pin size={12} />}
-              {fijo ? 'Desfijar' : 'Fijar panel'}
+              onClick={() => window.open(`/pedidos/caja-fija/${selected!.id}`, '_blank', 'noopener,noreferrer')}
+              title="Abrir en nueva pestaña modo caja"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <ExternalLink size={12} /> Modo Caja
             </button>
             <button onClick={marcarCobrada} disabled={marking}
               className="flex items-center gap-1.5 px-4 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors">
@@ -239,33 +232,6 @@ export default function VistaCajaPage() {
         </div>
       )}
 
-      {/* Modo Caja — pantalla completa */}
-      {selected && fijo && (
-        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
-          {/* Barra superior con botones de cierre */}
-          <div className="flex items-center justify-between px-4 py-2 bg-green-600 text-white shrink-0">
-            <span className="font-semibold text-sm flex items-center gap-2">
-              <Pin size={14} /> Modo Caja — {selected.nombre_cliente}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setFijo(false); marcarCobrada() }}
-                disabled={marking}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white text-green-700 rounded-lg font-semibold hover:bg-green-50 disabled:opacity-60 transition-colors">
-                <CheckCircle2 size={12} /> Cerrar y marcar cobrada
-              </button>
-              <button
-                onClick={() => setFijo(false)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-700 rounded-lg hover:bg-green-800 transition-colors">
-                ✕ Solo cerrar panel
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            <PanelDetalle />
-          </div>
-        </div>
-      )}
     </div>
   )
 }

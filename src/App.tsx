@@ -66,10 +66,11 @@ import GestionPermisosPage  from './pages/admin/GestionPermisosPage'
 // Wave 2 pages
 import InventarioPage    from './pages/inventario/InventarioPage'
 // Wave 3 pages
-import PedidosVentaPage  from './pages/pedidos/PedidosVentaPage'
-import VistaCajaPage     from './pages/pedidos/VistaCajaPage'
-import VistaSurtidoPage  from './pages/pedidos/VistaSurtidoPage'
-import VistaChecadorPage from './pages/pedidos/VistaChecadorPage'
+import PedidosVentaPage   from './pages/pedidos/PedidosVentaPage'
+import VistaCajaPage      from './pages/pedidos/VistaCajaPage'
+import VistaCajaFijaPage  from './pages/pedidos/VistaCajaFijaPage'
+import VistaSurtidoPage   from './pages/pedidos/VistaSurtidoPage'
+import VistaChecadorPage  from './pages/pedidos/VistaChecadorPage'
 import ClientesPage      from './pages/clientes/ClientesPage'
 import ProveedoresPage   from './pages/proveedores/ProveedoresPage'
 // Wave 4 pages
@@ -102,6 +103,11 @@ function App() {
         {/* Public */}
         <Route path="/login"      element={<MockLoginPage />} />
         <Route path="/login-real" element={<LoginPage />} />
+
+        {/* Protected sin layout — páginas standalone */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/pedidos/caja-fija/:id" element={<VistaCajaFijaPage />} />
+        </Route>
 
         {/* Protected — requiere autenticación */}
         <Route element={<ProtectedRoute />}>

@@ -294,7 +294,7 @@ function ModeChecarPiso() {
   const [verificados, setVerificados] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    api.get('/pedidos/venta?estados=completa_en_piso')
+    api.get('/pedidos/venta?estados=cobrada')
       .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
       .catch(() => setNotas([]))
       .finally(() => setLoading(false))
@@ -393,7 +393,7 @@ function ModeChecarPiso() {
 
       {/* Lista lateral */}
       <div className="w-72 flex-shrink-0 flex flex-col gap-2">
-        <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) para checar</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) cobrada(s) para checar</p>
 
         {/* Búsqueda + QR */}
         <div className="flex gap-2">
