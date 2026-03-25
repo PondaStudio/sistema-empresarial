@@ -279,6 +279,7 @@ function VistaVendedora() {
   const userId = useAuthStore(s => s.user?.id)
   const [notas, setNotas] = useState<Nota[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [selected, setSelected] = useState<Nota | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [isMock, setIsMock] = useState(false)
@@ -289,6 +290,18 @@ function VistaVendedora() {
       .catch(() => { setNotas(MOCK_NOTAS); setIsMock(true) })
       .finally(() => setLoading(false))
   }, [])
+
+  async function seleccionarNota(nota: Nota) {
+    setLoadingDetalle(true)
+    try {
+      const { data } = await api.get(`/pedidos/venta/${nota.id}`)
+      setSelected(data)
+    } catch {
+      setSelected(nota)
+    } finally {
+      setLoadingDetalle(false)
+    }
+  }
 
   function handleEstadoChange(id: string, estado: EstadoNota) {
     setNotas(prev => prev.map(n => n.id === id ? { ...n, estado, qr_code: estado === 'lista_para_cobro' ? n.folio : n.qr_code } : n))
@@ -347,13 +360,18 @@ function VistaVendedora() {
       <ListaNotas
         notas={notasVisibles}
         selected={selected}
-        onSelect={setSelected}
+        onSelect={seleccionarNota}
         onNueva={() => setShowModal(true)}
         nivelAcceso={nivel}
       />
 
       <div className="flex-1 overflow-y-auto min-h-0">
-        {!selected ? (
+        {loadingDetalle ? (
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm">Cargando detalle...</p>
+          </div>
+        ) : !selected ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <Clock size={40} strokeWidth={1} />
             <p>Selecciona una nota para ver el detalle</p>

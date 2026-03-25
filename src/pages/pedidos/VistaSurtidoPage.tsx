@@ -47,25 +47,38 @@ export default function VistaSurtidoPage() {
   async function guardarSurtido() {
     if (!selected) return
     setSaving(true)
-    const items = selected.items.map(it => ({
+
+    const items = (selected.items ?? []).map(it => ({
       id: it.id,
       cantidad_surtida: surtidoLocal[it.id]?.cantidad ?? 0,
-      estado_item: surtidoLocal[it.id]?.estado ?? it.estado_item,
+      estado_confirmacion: surtidoLocal[it.id]?.estado ?? it.estado_item ?? 'pendiente',
     }))
 
-    const allSurtido = items.every(i => i.estado_item === 'surtido')
-    const noneFound  = items.every(i => i.estado_item === 'no_encontrado')
+    const allSurtido = items.every(i => i.estado_confirmacion === 'surtido')
+    const noneFound  = items.every(i => i.estado_confirmacion === 'no_disponible')
     const nuevoEstado = allSurtido ? 'completa_en_piso' : noneFound ? 'con_incidencia' : 'surtido_parcial'
 
-    try {
-      await api.patch(`/pedidos/venta/${selected.id}/surtir`, { items, estado: nuevoEstado })
+    let errorOcurrido = false
+    for (const it of items) {
+      try {
+        await api.patch(`/pedidos/venta/${selected.id}/surtir-item/${it.id}`, {
+          cantidad_surtida:    it.cantidad_surtida,
+          estado_confirmacion: it.estado_confirmacion,
+        })
+      } catch (err: any) {
+        console.error('[guardarSurtido] error en item', it.id, err?.response?.data ?? err?.message)
+        errorOcurrido = true
+      }
+    }
+
+    if (errorOcurrido) {
+      toast.error('Algunos items no se pudieron guardar — revisa la consola')
+    } else {
       toast.success('Surtido guardado')
-    } catch {
-      toast.success('Surtido guardado (demo)')
     }
 
     setNotas(prev => prev.map(n => n.id === selected.id
-      ? { ...n, estado: nuevoEstado as any, items: n.items.map(it => ({
+      ? { ...n, estado: nuevoEstado as any, items: (n.items ?? []).map(it => ({
           ...it,
           cantidad_surtida: surtidoLocal[it.id]?.cantidad ?? it.cantidad_surtida,
           estado_item: (surtidoLocal[it.id]?.estado ?? it.estado_item) as any,
