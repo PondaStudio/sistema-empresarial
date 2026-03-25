@@ -12,7 +12,7 @@ export type EstadoNota =
 
 export interface ItemNota {
   id: string
-  producto_id: string
+  producto_id?: string | null
   codigo: string
   nombre: string
   cantidad: number
