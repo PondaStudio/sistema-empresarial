@@ -33,9 +33,9 @@ function CheckadorEscaner() {
   const [verificados, setVerificados]   = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    api.get('/pedidos/venta?estados=cobrada')
+    api.get('/pedidos/venta?estados=completa_en_piso')
       .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
-      .catch(() => setNotas(MOCK_NOTAS.filter(n => n.estado === 'cobrada')))
+      .catch(() => setNotas(MOCK_NOTAS.filter(n => n.estado === 'completa_en_piso')))
       .finally(() => setLoading(false))
   }, [])
 
@@ -121,7 +121,7 @@ function CheckadorEscaner() {
         <h1 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <ScanLine size={18} className="text-indigo-500" /> Checador Escáner
         </h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) cobradas</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) completa(s) en piso</p>
 
         <div className="flex gap-2">
           <div className="relative flex-1">
