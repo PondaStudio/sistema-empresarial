@@ -29,8 +29,12 @@ export default function VistaCajaPage() {
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
-    } catch {
-      setSelected(nota)
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        toast.error('Sin permiso para ver esta nota')
+      } else {
+        setSelected(nota)
+      }
     } finally {
       setLoadingDetalle(false)
     }

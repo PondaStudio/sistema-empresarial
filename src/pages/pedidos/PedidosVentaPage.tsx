@@ -598,22 +598,37 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
 }
 
 // ─── Modal Editar Nota ────────────────────────────────────────────────────────
+type EditItem = { codigo: string; nombre: string; cantidad: number }
+
 function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () => void; onSaved: (updated: Nota) => void }) {
   const [cliente, setCliente] = useState(nota.nombre_cliente)
   const [notasVal, setNotasVal] = useState(nota.notas ?? '')
   const [facturacion, setFacturacion] = useState(nota.facturacion ?? false)
   const [descuento, setDescuento] = useState(nota.descuento_especial ?? false)
+  const [items, setItems] = useState<EditItem[]>(() => {
+    const base = (nota.items ?? []).map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad }))
+    return base.length > 0 ? base : [{ codigo: '', nombre: '', cantidad: 1 }]
+  })
   const [saving, setSaving] = useState(false)
+
+  function updateItem(i: number, patch: Partial<EditItem>) {
+    setItems(p => p.map((it, idx) => idx === i ? { ...it, ...patch } : it))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cliente.trim()) { toast.error('El cliente es requerido'); return }
+    const filled = items.filter(it => it.codigo.trim() && it.nombre.trim())
+    if (filled.length === 0) { toast.error('Agrega al menos un producto'); return }
     setSaving(true)
-    const body = { nombre_cliente: cliente, notas: notasVal || undefined, facturacion, descuento_especial: descuento }
     try {
-      await api.patch(`/pedidos/venta/${nota.id}`, body)
+      const general = { nombre_cliente: cliente, notas: notasVal || undefined, facturacion, descuento_especial: descuento }
+      await api.patch(`/pedidos/venta/${nota.id}`, general)
+      await api.patch(`/pedidos/venta/${nota.id}/items`, {
+        items: filled.map(it => ({ codigo: it.codigo.toUpperCase(), nombre: it.nombre, cantidad: it.cantidad }))
+      })
       toast.success('Nota actualizada')
-      onSaved({ ...nota, ...body })
+      onSaved({ ...nota, ...general, items: filled.map(it => ({ ...it, codigo: it.codigo.toUpperCase(), id: '', estado_item: 'pendiente' as any, cantidad_surtida: null })) })
     } catch {
       toast.error('Error al guardar')
     } finally {
@@ -625,12 +640,12 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <h2 className="text-base font-bold text-gray-900 dark:text-white">Editar {nota.folio}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
             <input className={inputCls} value={cliente} onChange={e => setCliente(e.target.value)} required />
@@ -649,6 +664,52 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
             <textarea className={`${inputCls} resize-none`} rows={2} value={notasVal} onChange={e => setNotasVal(e.target.value)} />
           </div>
+
+          {/* Productos */}
+          <div>
+            <div className="grid grid-cols-[100px_1fr_72px_32px] gap-2 mb-1.5 px-1">
+              <span className="text-[10px] uppercase text-gray-400 font-medium">Código</span>
+              <span className="text-[10px] uppercase text-gray-400 font-medium">Descripción</span>
+              <span className="text-[10px] uppercase text-gray-400 font-medium text-center">Cant.</span>
+              <span />
+            </div>
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <div key={i} className="grid grid-cols-[100px_1fr_72px_32px] gap-2 items-center">
+                  <input
+                    className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase"
+                    placeholder="COD-001"
+                    value={item.codigo}
+                    onChange={e => updateItem(i, { codigo: e.target.value })}
+                  />
+                  <input
+                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Descripción"
+                    value={item.nombre}
+                    onChange={e => updateItem(i, { nombre: e.target.value })}
+                  />
+                  <input
+                    type="number" min={1}
+                    className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                    value={item.cantidad}
+                    onChange={e => updateItem(i, { cantidad: Math.max(1, parseInt(e.target.value) || 1) })}
+                  />
+                  {i === items.length - 1 ? (
+                    <button type="button"
+                      onClick={() => setItems(p => [...p, { codigo: '', nombre: '', cantidad: 1 }])}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 hover:bg-blue-200 transition-colors text-lg font-bold">+</button>
+                  ) : (
+                    <button type="button"
+                      onClick={() => setItems(p => p.filter((_, idx) => idx !== i))}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 transition-colors">
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
               className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">

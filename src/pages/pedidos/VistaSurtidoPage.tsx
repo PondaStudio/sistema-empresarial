@@ -10,6 +10,7 @@ export default function VistaSurtidoPage() {
   const [notas, setNotas] = useState<Nota[]>([])
   const [selected, setSelected] = useState<Nota | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
   const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string }>>({})
@@ -21,13 +22,26 @@ export default function VistaSurtidoPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  function initSurtido(nota: Nota) {
-    const init: Record<string, { cantidad: number; estado: string }> = {}
-    nota.items.forEach(it => {
-      init[it.id] = { cantidad: it.cantidad_surtida ?? 0, estado: it.estado_item }
-    })
-    setSurtidoLocal(init)
-    setSelected(nota)
+  async function seleccionarNota(nota: Nota) {
+    setLoadingDetalle(true)
+    try {
+      const { data } = await api.get(`/pedidos/venta/${nota.id}`)
+      const detalle: Nota = data
+      const init: Record<string, { cantidad: number; estado: string }> = {}
+      ;(detalle.items ?? []).forEach(it => {
+        init[it.id] = { cantidad: it.cantidad_surtida ?? 0, estado: it.estado_item }
+      })
+      setSurtidoLocal(init)
+      setSelected(detalle)
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        toast.error('Sin permiso para ver esta nota')
+      } else {
+        setSelected(nota)
+      }
+    } finally {
+      setLoadingDetalle(false)
+    }
   }
 
   async function guardarSurtido() {
@@ -91,7 +105,7 @@ export default function VistaSurtidoPage() {
           {notasFiltradas.map(n => {
             const est = ESTADO_LABELS[n.estado] ?? ESTADO_LABELS.capturada
             return (
-              <button key={n.id} onClick={() => initSurtido(n)}
+              <button key={n.id} onClick={() => seleccionarNota(n)} disabled={loadingDetalle}
                 className={`w-full text-left p-3 rounded-xl border transition-all ${
                   selected?.id === n.id
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -114,7 +128,12 @@ export default function VistaSurtidoPage() {
 
       {/* Surtido */}
       <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
-        {!selected ? (
+        {loadingDetalle ? (
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm">Cargando detalle...</p>
+          </div>
+        ) : !selected ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <Package size={40} strokeWidth={1} />
             <p>Selecciona una nota para surtir</p>
