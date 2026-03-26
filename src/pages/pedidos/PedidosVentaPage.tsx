@@ -608,6 +608,7 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                     type="number" min={1}
                     className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                     value={item.cantidad}
+                    onFocus={e => e.target.select()}
                     onChange={e => setItems(p => p.map((it, idx) => idx === i ? { ...it, cantidad: Math.max(1, parseInt(e.target.value) || 1) } : it))}
                   />
                   {i === items.length - 1 ? (
@@ -737,6 +738,7 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
                     type="number" min={1}
                     className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                     value={item.cantidad}
+                    onFocus={e => e.target.select()}
                     onChange={e => updateItem(i, { cantidad: Math.max(1, parseInt(e.target.value) || 1) })}
                   />
                   {i === items.length - 1 ? (

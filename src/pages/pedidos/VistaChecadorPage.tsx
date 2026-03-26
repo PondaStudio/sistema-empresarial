@@ -102,7 +102,15 @@ function CheckadorEscaner() {
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
       console.error('[CheckadorEscaner] Error en /checada-piso:', err?.response?.status, err?.response?.data)
-      toast.error(`Error: ${msg}`, { duration: 6000 })
+      console.log('[CheckadorEscaner] Response completo:', err?.response)
+      if (typeof msg === 'string' && msg.toLowerCase().includes('estado_actual no es cobrada')) {
+        toast.error('Esta nota ya fue procesada. Recargando lista...', { duration: 4000 })
+        setSelected(null)
+        setVerificados(new Set())
+        await cargarLista()
+      } else {
+        toast.error(`Error: ${msg}`, { duration: 6000 })
+      }
     } finally {
       setProcessing(false)
     }

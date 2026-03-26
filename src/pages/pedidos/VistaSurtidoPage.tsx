@@ -254,6 +254,7 @@ function ModeSurtir() {
                         <td className="px-3 py-2 text-center font-medium text-gray-700 dark:text-gray-300">{item.cantidad}</td>
                         <td className="px-3 py-2 text-center">
                           <input type="number" min={0} max={item.cantidad} value={loc.cantidad}
+                            onFocus={e => e.target.select()}
                             onChange={e => setSurtidoLocal(prev => ({ ...prev, [item.id]: { ...loc, cantidad: Math.min(item.cantidad, Math.max(0, parseInt(e.target.value) || 0)) } }))}
                             className="w-16 px-2 py-1 text-sm text-center border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
