@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Package, Save, Search, CheckCircle2, QrCode, DoorOpen } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-import { useAuthStore } from '../../store/authStore'
 import { Nota, ESTADO_LABELS, MOCK_NOTAS } from './types'
 import { QRScanner } from '../../components/pedidos/QRScanner'
 
@@ -20,13 +19,6 @@ function cantidadARevisar(total: number): number {
 }
 
 export default function VistaSurtidoPage() {
-  const subtipo = useAuthStore(s => s.user?.subtipo ?? null)
-
-  // Checadores ven solo su modo (sin tabs)
-  if (subtipo === 'checador_escaner') return <ModeChecarPiso />
-  if (subtipo === 'checador_rapido')  return <ModeChecarPuerta />
-
-  // Almacenista normal: 3 tabs
   return <AlmacenistaLayout />
 }
 
