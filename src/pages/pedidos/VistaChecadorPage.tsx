@@ -81,15 +81,18 @@ function CheckadorEscaner() {
   async function confirmarChecadaPiso() {
     if (!selected) return
     setProcessing(true)
+    console.log('[CheckadorEscaner] PATCH /checada-piso', { id: selected.id, token: api.defaults.headers.common?.['Authorization'] })
     try {
       await api.patch(`/pedidos/venta/${selected.id}/checada-piso`)
       toast.success('✅ Checada en piso confirmada')
-    } catch {
-      toast.success('✅ Checada en piso (demo)')
+      setNotas(prev => prev.filter(n => n.id !== selected.id))
+      setSelected(null)
+      setSearch('')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
+      console.error('[CheckadorEscaner] Error en /checada-piso:', err?.response?.data ?? err)
+      toast.error(`Error: ${msg}`, { duration: 5000 })
     }
-    setNotas(prev => prev.filter(n => n.id !== selected.id))
-    setSelected(null)
-    setSearch('')
     setProcessing(false)
   }
 

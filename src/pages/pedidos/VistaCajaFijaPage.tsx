@@ -35,7 +35,7 @@ export default function VistaCajaFijaPage() {
       await api.patch(`/pedidos/venta/${nota.id}/cobrar`)
       setCobrada(true)
       toast.success('Nota marcada como cobrada')
-      // Actualizar título de pestaña
+      // Actualizar título de ventana
       document.title = `✅ Cobrada — ${nota.folio}`
     } catch {
       toast.success('Marcada como cobrada (demo)')
@@ -62,6 +62,11 @@ export default function VistaCajaFijaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      {/* Banner informativo */}
+      <div className="bg-blue-600 text-white text-xs text-center py-2 px-4 shrink-0">
+        📌 Mantén esta ventana abierta mientras cobras en CONTPAQi
+      </div>
+
       {/* Barra superior */}
       <div className={`flex items-center justify-between px-4 py-3 ${cobrada ? 'bg-gray-500' : 'bg-green-600'} text-white shrink-0`}>
         <span className="font-bold text-sm flex items-center gap-2">
