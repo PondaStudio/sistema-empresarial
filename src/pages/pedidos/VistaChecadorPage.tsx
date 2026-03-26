@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, ScanLine, CheckCircle2, QrCode } from 'lucide-react'
+import { Search, ScanLine, CheckCircle2, QrCode, DoorOpen } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../../store/authStore'
@@ -21,7 +21,7 @@ function cantidadARevisar(total: number): number {
   return 5
 }
 
-// ─── Checador Escáner: notas cobradas → checada en piso ───────────────────────
+// ─── Checador de Piso: notas cobradas → checada_en_piso ───────────────────────
 function CheckadorEscaner() {
   const [notas, setNotas]               = useState<Nota[]>([])
   const [selected, setSelected]         = useState<Nota | null>(null)
@@ -80,20 +80,25 @@ function CheckadorEscaner() {
 
   async function confirmarChecadaPiso() {
     if (!selected) return
+    // Capturar ID antes de cualquier await para evitar stale closure
+    const notaId = selected.id
     setProcessing(true)
-    console.log('[CheckadorEscaner] PATCH /checada-piso', { id: selected.id, token: api.defaults.headers.common?.['Authorization'] })
+    console.log('[CheckadorEscaner] PATCH /checada-piso', { notaId, token: api.defaults.headers.common?.['Authorization'] })
     try {
-      await api.patch(`/pedidos/venta/${selected.id}/checada-piso`)
+      await api.patch(`/pedidos/venta/${notaId}/checada-piso`)
       toast.success('✅ Checada en piso confirmada')
-      setNotas(prev => prev.filter(n => n.id !== selected.id))
+      // Limpiar estado inmediatamente con el ID capturado
+      setNotas(prev => prev.filter(n => n.id !== notaId))
       setSelected(null)
+      setVerificados(new Set())
       setSearch('')
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
-      console.error('[CheckadorEscaner] Error en /checada-piso:', err?.response?.data ?? err)
-      toast.error(`Error: ${msg}`, { duration: 5000 })
+      console.error('[CheckadorEscaner] Error en /checada-piso:', err?.response?.status, err?.response?.data)
+      toast.error(`Error: ${msg}`, { duration: 6000 })
+    } finally {
+      setProcessing(false)
     }
-    setProcessing(false)
   }
 
   const filtradas = notas.filter(n =>
@@ -106,7 +111,7 @@ function CheckadorEscaner() {
   if (loading) return (
     <div className="p-8 flex items-center gap-3 text-gray-400">
       <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      Cargando checador escáner...
+      Cargando checador de piso...
     </div>
   )
 
@@ -122,7 +127,7 @@ function CheckadorEscaner() {
       {/* Lista */}
       <div className="w-72 flex-shrink-0 flex flex-col gap-2">
         <h1 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <ScanLine size={18} className="text-indigo-500" /> Checador Escáner
+          <ScanLine size={18} className="text-indigo-500" /> Checador de Piso
         </h1>
         <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) cobrada(s)</p>
 
@@ -137,11 +142,9 @@ function CheckadorEscaner() {
               onKeyDown={e => { if (e.key === 'Enter' && search.trim()) buscarPorFolio(search) }}
             />
           </div>
-          <button
-            onClick={() => setShowQR(true)}
+          <button onClick={() => setShowQR(true)}
             className="flex-shrink-0 p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-            title="Escanear QR"
-          >
+            title="Escanear QR">
             <QrCode size={14} />
           </button>
         </div>
@@ -159,7 +162,13 @@ function CheckadorEscaner() {
             </button>
           ))}
           {filtradas.length === 0 && !loadingDetalle && (
-            <p className="text-xs text-gray-400 text-center py-6">Sin notas cobradas</p>
+            <div className="text-center py-6 space-y-3">
+              <p className="text-xs text-gray-400">Sin notas cobradas pendientes</p>
+              <button onClick={() => setShowQR(true)}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors mx-auto">
+                <QrCode size={14} /> Escanear QR
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -250,7 +259,7 @@ function CheckadorEscaner() {
   )
 }
 
-// ─── Checador Rápido: notas checadas en piso → confirmar salida ───────────────
+// ─── Checador de Puerta: notas checadas_en_piso → checada_en_salida ───────────
 function CheckadorRapido() {
   const [notas, setNotas]               = useState<Nota[]>([])
   const [selected, setSelected]         = useState<Nota | null>(null)
@@ -259,8 +268,10 @@ function CheckadorRapido() {
   const [loading, setLoading]           = useState(true)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [processing, setProcessing]     = useState(false)
+  const [cerrando, setCerrando]         = useState(false)
   const [showQR, setShowQR]             = useState(false)
   const [verificados, setVerificados]   = useState<Set<string>>(new Set())
+  const [salidaConfirmada, setSalidaConfirmada] = useState<string | null>(null) // notaId tras confirmar salida
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=checada_en_piso')
@@ -289,6 +300,7 @@ function CheckadorRapido() {
   async function cargarDetalle(nota: Nota) {
     setLoadingDetalle(true)
     setVerificados(new Set())
+    setSalidaConfirmada(null)
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
@@ -314,18 +326,39 @@ function CheckadorRapido() {
 
   async function confirmarSalida() {
     if (!selected) return
+    const notaId = selected.id
     setProcessing(true)
+    console.log('[CheckadorRapido] PATCH /checada-salida', { notaId })
     try {
-      await api.patch(`/pedidos/venta/${selected.id}/checada-salida`)
+      await api.patch(`/pedidos/venta/${notaId}/checada-salida`)
       toast.success('✅ Salida confirmada')
-    } catch {
-      toast.success('✅ Salida confirmada (demo)')
+      setSalidaConfirmada(notaId)
+      setNotas(prev => prev.filter(n => n.id !== notaId))
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
+      console.error('[CheckadorRapido] Error en /checada-salida:', err?.response?.status, err?.response?.data)
+      toast.error(`Error: ${msg}`, { duration: 6000 })
+    } finally {
+      setProcessing(false)
     }
-    setNotas(prev => prev.filter(n => n.id !== selected.id))
-    setSelected(null)
-    setMuestraItems([])
-    setSearch('')
-    setProcessing(false)
+  }
+
+  async function cerrarNota() {
+    if (!selected) return
+    const notaId = selected.id
+    setCerrando(true)
+    try {
+      await api.patch(`/pedidos/venta/${notaId}/cerrar`)
+      toast.success('Nota cerrada definitivamente')
+      setSelected(null)
+      setSalidaConfirmada(null)
+      setSearch('')
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error'
+      toast.error(`Error al cerrar: ${msg}`, { duration: 5000 })
+    } finally {
+      setCerrando(false)
+    }
   }
 
   const filtradas = notas.filter(n =>
@@ -337,7 +370,7 @@ function CheckadorRapido() {
   if (loading) return (
     <div className="p-8 flex items-center gap-3 text-gray-400">
       <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-      Cargando checador rápido...
+      Cargando checador de puerta...
     </div>
   )
 
@@ -353,9 +386,9 @@ function CheckadorRapido() {
       {/* Lista */}
       <div className="w-72 flex-shrink-0 flex flex-col gap-2">
         <h1 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <CheckCircle2 size={18} className="text-violet-500" /> Checador Rápido
+          <DoorOpen size={18} className="text-violet-500" /> Checador de Puerta
         </h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) para verificar</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) checada(s) en piso</p>
 
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -368,11 +401,9 @@ function CheckadorRapido() {
               onKeyDown={e => { if (e.key === 'Enter' && search.trim()) buscarPorFolio(search) }}
             />
           </div>
-          <button
-            onClick={() => setShowQR(true)}
+          <button onClick={() => setShowQR(true)}
             className="flex-shrink-0 p-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors"
-            title="Escanear QR"
-          >
+            title="Escanear QR">
             <QrCode size={14} />
           </button>
         </div>
@@ -390,7 +421,13 @@ function CheckadorRapido() {
             </button>
           ))}
           {filtradas.length === 0 && !loadingDetalle && (
-            <p className="text-xs text-gray-400 text-center py-6">Sin notas para verificar</p>
+            <div className="text-center py-6 space-y-3">
+              <p className="text-xs text-gray-400">Sin notas para verificar en puerta</p>
+              <button onClick={() => setShowQR(true)}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors mx-auto">
+                <QrCode size={14} /> Escanear QR
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -404,7 +441,7 @@ function CheckadorRapido() {
           </div>
         ) : !selected ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
-            <CheckCircle2 size={40} strokeWidth={1} />
+            <DoorOpen size={40} strokeWidth={1} />
             <p className="text-sm">Selecciona o escanea una nota para verificar</p>
             <button onClick={() => setShowQR(true)}
               className="mt-2 flex items-center gap-2 px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors">
@@ -419,19 +456,31 @@ function CheckadorRapido() {
                 <h2 className="text-lg font-bold font-mono text-gray-900 dark:text-white">{selected.folio}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{selected.nombre_cliente}</p>
               </div>
-              <button onClick={confirmarSalida} disabled={processing || !todosVerificados}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <CheckCircle2 size={14} />
-                {processing ? 'Procesando...' : 'Confirmar salida'}
-              </button>
+              {salidaConfirmada ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                    <CheckCircle2 size={14} /> Salida confirmada
+                  </span>
+                  <button onClick={cerrarNota} disabled={cerrando}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors">
+                    {cerrando ? 'Cerrando...' : 'Cerrar nota definitivamente'}
+                  </button>
+                </div>
+              ) : (
+                <button onClick={confirmarSalida} disabled={processing || !todosVerificados}
+                  className="flex items-center gap-1.5 px-4 py-2 text-sm bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  <CheckCircle2 size={14} />
+                  {processing ? 'Procesando...' : 'Confirmar salida'}
+                </button>
+              )}
             </div>
 
-            {/* Nota de muestreo */}
+            {/* Info de muestreo */}
             <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg px-3 py-2">
               <p className="text-xs text-violet-700 dark:text-violet-400 font-medium">
                 Verificación rápida — revisa {muestraItems.length} de {(selected.items ?? []).length} productos (selección aleatoria)
               </p>
-              {!todosVerificados && (
+              {!salidaConfirmada && !todosVerificados && (
                 <p className="text-xs text-violet-600 dark:text-violet-500 mt-0.5">
                   Marca todos para habilitar la confirmación
                 </p>
@@ -443,23 +492,27 @@ function CheckadorRapido() {
               {muestraItems.map((item: any) => {
                 const checked = verificados.has(item.id)
                 return (
-                  <button key={item.id} onClick={() => toggleVerificado(item.id)}
+                  <button key={item.id} onClick={() => { if (!salidaConfirmada) toggleVerificado(item.id) }}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
-                      checked
-                        ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300'
+                      salidaConfirmada
+                        ? 'border-green-400 bg-green-50 dark:bg-green-900/20 cursor-default'
+                        : checked
+                          ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
+                          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300'
                     }`}>
                     <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                      checked ? 'border-violet-500 bg-violet-500' : 'border-gray-300 dark:border-gray-600'
+                      salidaConfirmada ? 'border-green-500 bg-green-500'
+                      : checked ? 'border-violet-500 bg-violet-500'
+                      : 'border-gray-300 dark:border-gray-600'
                     }`}>
-                      {checked && (
+                      {(checked || salidaConfirmada) && (
                         <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-base font-semibold ${checked ? 'text-violet-700 dark:text-violet-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                      <p className={`text-base font-semibold ${salidaConfirmada ? 'text-green-700 dark:text-green-400' : checked ? 'text-violet-700 dark:text-violet-400' : 'text-gray-800 dark:text-gray-200'}`}>
                         {item.nombre}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -467,18 +520,22 @@ function CheckadorRapido() {
                       </p>
                     </div>
                     <span className={`text-sm font-bold px-3 py-1 rounded-full flex-shrink-0 ${
-                      checked ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                      salidaConfirmada ? 'bg-green-100 text-green-700'
+                      : checked ? 'bg-violet-100 text-violet-700'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
                     }`}>
-                      {checked ? '✓' : '○'}
+                      {(checked || salidaConfirmada) ? '✓' : '○'}
                     </span>
                   </button>
                 )
               })}
             </div>
 
-            <div className="text-xs text-gray-400 text-right">
-              {verificados.size} / {muestraItems.length} verificados
-            </div>
+            {!salidaConfirmada && (
+              <div className="text-xs text-gray-400 text-right">
+                {verificados.size} / {muestraItems.length} verificados
+              </div>
+            )}
           </div>
         )}
       </div>
