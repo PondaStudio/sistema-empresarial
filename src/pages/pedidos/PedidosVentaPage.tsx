@@ -66,12 +66,12 @@ function ListaNotas({
   )
 
   return (
-    <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+    <div className="w-full md:w-72 flex-shrink-0 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <h1 className="text-base font-bold text-gray-900 dark:text-white">Notas de Venta</h1>
         {nivelAcceso >= 10 && (
           <button onClick={onNueva}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            className="flex items-center gap-1 px-3 py-1.5 min-h-[44px] text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             <Plus size={13} /> Nueva
           </button>
         )}
@@ -296,6 +296,7 @@ function VistaVendedora() {
   const [selected, setSelected] = useState<Nota | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [isMock, setIsMock] = useState(false)
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   useEffect(() => {
     api.get('/pedidos/venta')
@@ -306,6 +307,7 @@ function VistaVendedora() {
 
   async function seleccionarNota(nota: Nota) {
     setLoadingDetalle(true)
+    setMobileShowDetail(true)
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
@@ -363,22 +365,34 @@ function VistaVendedora() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0 relative">
       {isMock && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-amber-100 text-amber-700 text-xs px-4 py-1.5 rounded-full border border-amber-200 shadow">
           ⚠ Modo demo — sin conexión al API
         </div>
       )}
 
-      <ListaNotas
-        notas={notasVisibles}
-        selected={selected}
-        onSelect={seleccionarNota}
-        onNueva={() => setShowModal(true)}
-        nivelAcceso={nivel}
-      />
+      {/* Lista: full width on mobile (hidden when detail shown), fixed width on desktop */}
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2 min-h-0`}>
+        <ListaNotas
+          notas={notasVisibles}
+          selected={selected}
+          onSelect={seleccionarNota}
+          onNueva={() => setShowModal(true)}
+          nivelAcceso={nivel}
+        />
+      </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0">
+      {/* Detail: full screen on mobile when shown, flex-1 on desktop */}
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 overflow-y-auto min-h-0`}>
+        {/* Mobile back button */}
+        <button
+          onClick={() => { setMobileShowDetail(false); setSelected(null) }}
+          className="md:hidden flex items-center gap-1 text-sm text-blue-600 mb-3 min-h-[44px]"
+        >
+          ← Volver
+        </button>
+
         {loadingDetalle ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -393,7 +407,7 @@ function VistaVendedora() {
           <DetalleNota
             nota={selected}
             onEstadoChange={handleEstadoChange}
-            onDelete={id => { setNotas(prev => prev.filter(n => n.id !== id)); setSelected(null) }}
+            onDelete={id => { setNotas(prev => prev.filter(n => n.id !== id)); setSelected(null); setMobileShowDetail(false) }}
             onEdited={updated => { setNotas(prev => prev.map(n => n.id === updated.id ? updated : n)); setSelected(updated) }}
           />
         )}
@@ -502,11 +516,11 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
   const inputCls = 'w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm md:p-4">
+      <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-2xl h-full md:h-auto md:max-h-[92vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <h2 className="text-base font-bold text-gray-900 dark:text-white">Nueva Nota de Venta</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={20} /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -670,11 +684,11 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
   const inputCls = 'w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm md:p-4">
+      <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-2xl h-full md:h-auto md:max-h-[92vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <h2 className="text-base font-bold text-gray-900 dark:text-white">Editar {nota.folio}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>

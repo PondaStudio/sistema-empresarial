@@ -19,6 +19,7 @@ export default function VistaCajaPage() {
   const [loading, setLoading] = useState(true)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [marking, setMarking] = useState(false)
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   useEffect(() => {
     api.get('/pedidos/venta?estados=lista_para_cobro')
@@ -32,11 +33,13 @@ export default function VistaCajaPage() {
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
+      setMobileShowDetail(true)
     } catch (err: any) {
       if (err?.response?.status === 403) {
         toast.error('Sin permiso para ver esta nota')
       } else {
         setSelected(nota)
+        setMobileShowDetail(true)
       }
     } finally {
       setLoadingDetalle(false)
@@ -54,6 +57,7 @@ export default function VistaCajaPage() {
     }
     setNotas(prev => prev.filter(n => n.id !== selected.id))
     setSelected(null)
+    setMobileShowDetail(false)
     setMarking(false)
   }
 
@@ -177,9 +181,9 @@ export default function VistaCajaPage() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {/* Lista de notas */}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2`}>
         <h1 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <CreditCard size={18} className="text-green-600" /> Vista de Caja
         </h1>
@@ -213,24 +217,31 @@ export default function VistaCajaPage() {
         </div>
       </div>
 
-      {/* Panel derecho — normal (no fijo) */}
-      {loadingDetalle ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-2">
-          <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm">Cargando detalle...</p>
-        </div>
-      ) : !selected ? (
-        <div className="flex-1 flex items-center justify-center text-gray-400">
-          <div className="text-center space-y-2">
-            <CreditCard size={40} strokeWidth={1} />
-            <p>Selecciona una nota para procesar el cobro</p>
+      {/* Panel derecho */}
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+        <button
+          onClick={() => setMobileShowDetail(false)}
+          className="md:hidden flex items-center gap-1 text-sm text-blue-600 mb-3 min-h-[44px]">
+          ← Volver
+        </button>
+        {loadingDetalle ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-2">
+            <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm">Cargando detalle...</p>
           </div>
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0">
-          <PanelDetalle />
-        </div>
-      )}
+        ) : !selected ? (
+          <div className="flex-1 flex items-center justify-center text-gray-400">
+            <div className="text-center space-y-2">
+              <CreditCard size={40} strokeWidth={1} />
+              <p>Selecciona una nota para procesar el cobro</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0">
+            <PanelDetalle />
+          </div>
+        )}
+      </div>
 
     </div>
   )

@@ -79,6 +79,7 @@ function ModeSurtir() {
   const [search, setSearch] = useState('')
   const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string; area: string }>>({})
   const [areas, setAreas] = useState<string[]>(AREAS_DEFAULT)
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   useEffect(() => {
     api.get('/areas-bodega')
@@ -97,6 +98,7 @@ function ModeSurtir() {
 
   async function seleccionarNota(nota: Nota) {
     setLoadingDetalle(true)
+    setMobileShowDetail(true)
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       const detalle: Nota = data
@@ -163,8 +165,9 @@ function ModeSurtir() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
-      <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
+      {/* Lista — full width on mobile, hidden when detail shown */}
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2 min-h-0`}>
         <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) pendiente(s)</p>
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -196,7 +199,16 @@ function ModeSurtir() {
         </div>
       </div>
 
-      <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
+      {/* Detail — full screen on mobile when shown */}
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+        {/* Mobile back button */}
+        <button
+          onClick={() => { setMobileShowDetail(false); setSelected(null) }}
+          className="md:hidden flex items-center gap-1 text-sm text-blue-600 mb-3 min-h-[44px]"
+        >
+          ← Volver
+        </button>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
         {loadingDetalle ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -209,14 +221,14 @@ function ModeSurtir() {
           </div>
         ) : (
           <div className="p-5 space-y-4">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between flex-wrap gap-3">
               <div>
                 <h2 className="text-lg font-bold font-mono text-gray-900 dark:text-white">{selected.folio}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{selected.nombre_cliente}</p>
                 {selected.notas && <p className="text-xs text-gray-400 italic mt-1">"{selected.notas}"</p>}
               </div>
               <button onClick={guardarSurtido} disabled={saving}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors">
+                className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors">
                 <Save size={14} /> {saving ? 'Guardando...' : 'Guardar surtido'}
               </button>
             </div>
@@ -269,6 +281,7 @@ function ModeSurtir() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
@@ -284,6 +297,7 @@ function ModeChecarPiso() {
   const [search, setSearch]           = useState('')
   const [showQR, setShowQR]           = useState(false)
   const [verificados, setVerificados] = useState<Set<string>>(new Set())
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   const cargarLista = () =>
     api.get('/pedidos/venta?estados=cobrada')
@@ -309,6 +323,7 @@ function ModeChecarPiso() {
   async function cargarDetalle(nota: Nota) {
     setLoadingDetalle(true)
     setVerificados(new Set())
+    setMobileShowDetail(true)
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
@@ -333,6 +348,7 @@ function ModeChecarPiso() {
       setSelected(null)
       setVerificados(new Set())
       setSearch('')
+      setMobileShowDetail(false)
       await cargarLista()
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
@@ -356,9 +372,10 @@ function ModeChecarPiso() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {showQR && <QRScanner onScan={f => { setShowQR(false); buscarPorFolio(f) }} onClose={() => setShowQR(false)} />}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+      {/* Lista */}
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2 min-h-0`}>
         <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) cobrada(s)</p>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -368,7 +385,7 @@ function ModeChecarPiso() {
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && search.trim()) buscarPorFolio(search) }} />
           </div>
-          <button onClick={() => setShowQR(true)} className="flex-shrink-0 p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"><QrCode size={14} /></button>
+          <button onClick={() => setShowQR(true)} className="flex-shrink-0 p-2 min-h-[44px] rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"><QrCode size={14} /></button>
         </div>
         <div className="space-y-1.5 overflow-y-auto flex-1">
           {filtradas.map(n => (
@@ -386,7 +403,10 @@ function ModeChecarPiso() {
           )}
         </div>
       </div>
-      <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
+      {/* Detail */}
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+        <button onClick={() => { setMobileShowDetail(false); setSelected(null) }} className="md:hidden flex items-center gap-1 text-sm text-indigo-600 mb-3 min-h-[44px]">← Volver</button>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
         {loadingDetalle ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" /><p className="text-sm">Cargando...</p>
@@ -432,6 +452,7 @@ function ModeChecarPiso() {
             <div className="text-xs text-gray-400 text-right">{verificados.size} / {items.length} verificados</div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
@@ -450,6 +471,7 @@ function ModeChecarPuerta() {
   const [showQR, setShowQR]           = useState(false)
   const [verificados, setVerificados] = useState<Set<string>>(new Set())
   const [salidaConfirmada, setSalidaConfirmada] = useState<string | null>(null)
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   const cargarLista = () =>
     api.get('/pedidos/venta?estados=checada_en_piso')
@@ -476,6 +498,7 @@ function ModeChecarPuerta() {
     setLoadingDetalle(true)
     setVerificados(new Set())
     setSalidaConfirmada(null)
+    setMobileShowDetail(true)
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
@@ -520,6 +543,7 @@ function ModeChecarPuerta() {
       setSelected(null)
       setSalidaConfirmada(null)
       setSearch('')
+      setMobileShowDetail(false)
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? 'Error'
       toast.error(`Error al cerrar: ${msg}`, { duration: 5000 })
@@ -540,9 +564,10 @@ function ModeChecarPuerta() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {showQR && <QRScanner onScan={f => { setShowQR(false); buscarPorFolio(f) }} onClose={() => setShowQR(false)} />}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+      {/* Lista */}
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2 min-h-0`}>
         <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) checada(s) en piso</p>
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -552,7 +577,7 @@ function ModeChecarPuerta() {
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && search.trim()) buscarPorFolio(search) }} />
           </div>
-          <button onClick={() => setShowQR(true)} className="flex-shrink-0 p-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors"><QrCode size={14} /></button>
+          <button onClick={() => setShowQR(true)} className="flex-shrink-0 p-2 min-h-[44px] rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors"><QrCode size={14} /></button>
         </div>
         <div className="space-y-1.5 overflow-y-auto flex-1">
           {filtradas.map(n => (
@@ -570,7 +595,10 @@ function ModeChecarPuerta() {
           )}
         </div>
       </div>
-      <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
+      {/* Detail */}
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+        <button onClick={() => { setMobileShowDetail(false); setSelected(null) }} className="md:hidden flex items-center gap-1 text-sm text-violet-600 mb-3 min-h-[44px]">← Volver</button>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
         {loadingDetalle ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /><p className="text-sm">Cargando...</p>
@@ -637,6 +665,7 @@ function ModeChecarPuerta() {
             {!salidaConfirmada && <div className="text-xs text-gray-400 text-right">{verificados.size} / {muestraItems.length} verificados</div>}
           </div>
         )}
+        </div>
       </div>
     </div>
   )

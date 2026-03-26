@@ -31,6 +31,7 @@ function CheckadorEscaner() {
   const [processing, setProcessing]     = useState(false)
   const [showQR, setShowQR]             = useState(false)
   const [verificados, setVerificados]   = useState<Set<string>>(new Set())
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   async function cargarLista() {
     try {
@@ -68,9 +69,10 @@ function CheckadorEscaner() {
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
+      setMobileShowDetail(true)
     } catch (err: any) {
       if (err?.response?.status === 403) toast.error('Sin permiso para ver esta nota')
-      else setSelected(nota)
+      else { setSelected(nota); setMobileShowDetail(true) }
     } finally {
       setLoadingDetalle(false)
     }
@@ -121,7 +123,7 @@ function CheckadorEscaner() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {showQR && (
         <QRScanner
           onScan={folio => { setShowQR(false); buscarPorFolio(folio) }}
@@ -130,7 +132,7 @@ function CheckadorEscaner() {
       )}
 
       {/* Lista */}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2`}>
         <h1 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <ScanLine size={18} className="text-indigo-500" /> Checador de Piso
         </h1>
@@ -179,7 +181,13 @@ function CheckadorEscaner() {
       </div>
 
       {/* Panel verificación */}
-      <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+        <button
+          onClick={() => { setMobileShowDetail(false); setSelected(null) }}
+          className="md:hidden flex items-center gap-1 text-sm text-indigo-600 mb-3 min-h-[44px]">
+          ← Volver
+        </button>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
         {loadingDetalle ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -259,6 +267,7 @@ function CheckadorEscaner() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
@@ -277,6 +286,7 @@ function CheckadorRapido() {
   const [showQR, setShowQR]             = useState(false)
   const [verificados, setVerificados]   = useState<Set<string>>(new Set())
   const [salidaConfirmada, setSalidaConfirmada] = useState<string | null>(null) // notaId tras confirmar salida
+  const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
   async function cargarLista() {
     try {
@@ -315,13 +325,14 @@ function CheckadorRapido() {
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       setSelected(data)
+      setMobileShowDetail(true)
       const todos = data.items ?? []
       const n = cantidadARevisar(todos.length)
       const shuffled = [...todos].sort(() => Math.random() - 0.5)
       setMuestraItems(shuffled.slice(0, n))
     } catch (err: any) {
       if (err?.response?.status === 403) toast.error('Sin permiso para ver esta nota')
-      else { setSelected(nota); setMuestraItems([]) }
+      else { setSelected(nota); setMuestraItems([]); setMobileShowDetail(true) }
     } finally {
       setLoadingDetalle(false)
     }
@@ -386,7 +397,7 @@ function CheckadorRapido() {
   )
 
   return (
-    <div className="p-4 md:p-6 flex gap-5 h-full min-h-0">
+    <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {showQR && (
         <QRScanner
           onScan={folio => { setShowQR(false); buscarPorFolio(folio) }}
@@ -395,7 +406,7 @@ function CheckadorRapido() {
       )}
 
       {/* Lista */}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-2">
+      <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2`}>
         <h1 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <DoorOpen size={18} className="text-violet-500" /> Checador de Puerta
         </h1>
@@ -444,7 +455,13 @@ function CheckadorRapido() {
       </div>
 
       {/* Panel verificación rápida */}
-      <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
+      <div className={`${mobileShowDetail ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-h-0`}>
+        <button
+          onClick={() => { setMobileShowDetail(false); setSelected(null) }}
+          className="md:hidden flex items-center gap-1 text-sm text-violet-600 mb-3 min-h-[44px]">
+          ← Volver
+        </button>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-y-auto min-h-0">
         {loadingDetalle ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-2">
             <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
@@ -549,6 +566,7 @@ function CheckadorRapido() {
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   )
