@@ -32,11 +32,17 @@ function CheckadorEscaner() {
   const [showQR, setShowQR]             = useState(false)
   const [verificados, setVerificados]   = useState<Set<string>>(new Set())
 
+  async function cargarLista() {
+    try {
+      const r = await api.get('/pedidos/venta?estados=cobrada')
+      setNotas(Array.isArray(r.data) ? r.data : [])
+    } catch {
+      setNotas(MOCK_NOTAS.filter(n => n.estado === 'cobrada'))
+    }
+  }
+
   useEffect(() => {
-    api.get('/pedidos/venta?estados=cobrada')
-      .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
-      .catch(() => setNotas(MOCK_NOTAS.filter(n => n.estado === 'cobrada')))
-      .finally(() => setLoading(false))
+    cargarLista().finally(() => setLoading(false))
   }, [])
 
   async function buscarPorFolio(folio: string) {
@@ -87,11 +93,10 @@ function CheckadorEscaner() {
     try {
       await api.patch(`/pedidos/venta/${notaId}/checada-piso`)
       toast.success('✅ Checada en piso confirmada')
-      // Limpiar estado inmediatamente con el ID capturado
-      setNotas(prev => prev.filter(n => n.id !== notaId))
       setSelected(null)
       setVerificados(new Set())
       setSearch('')
+      await cargarLista()
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
       console.error('[CheckadorEscaner] Error en /checada-piso:', err?.response?.status, err?.response?.data)
@@ -273,11 +278,17 @@ function CheckadorRapido() {
   const [verificados, setVerificados]   = useState<Set<string>>(new Set())
   const [salidaConfirmada, setSalidaConfirmada] = useState<string | null>(null) // notaId tras confirmar salida
 
+  async function cargarLista() {
+    try {
+      const r = await api.get('/pedidos/venta?estados=checada_en_piso')
+      setNotas(Array.isArray(r.data) ? r.data : [])
+    } catch {
+      setNotas([])
+    }
+  }
+
   useEffect(() => {
-    api.get('/pedidos/venta?estados=checada_en_piso')
-      .then(r => setNotas(Array.isArray(r.data) ? r.data : []))
-      .catch(() => setNotas([]))
-      .finally(() => setLoading(false))
+    cargarLista().finally(() => setLoading(false))
   }, [])
 
   async function buscarPorFolio(folio: string) {
@@ -333,7 +344,7 @@ function CheckadorRapido() {
       await api.patch(`/pedidos/venta/${notaId}/checada-salida`)
       toast.success('✅ Salida confirmada')
       setSalidaConfirmada(notaId)
-      setNotas(prev => prev.filter(n => n.id !== notaId))
+      await cargarLista()
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? err?.response?.data?.error ?? err?.message ?? 'Error desconocido'
       console.error('[CheckadorRapido] Error en /checada-salida:', err?.response?.status, err?.response?.data)
