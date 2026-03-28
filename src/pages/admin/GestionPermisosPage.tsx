@@ -102,7 +102,7 @@ const SF: Subfuncion[] = [
 // ─── Metadatos visuales por módulo ───────────────────────────────────────────
 const MODULO_META: Record<string, { label: string; icon: string; ring: string; bg: string; text: string }> = {
   inventario:          { label: 'Inventario',           icon: '📦', ring: 'ring-blue-200',     bg: 'bg-blue-50',     text: 'text-blue-700'    },
-  pedidos_venta:       { label: 'Pedidos de Venta',     icon: '🛒', ring: 'ring-emerald-200',  bg: 'bg-emerald-50',  text: 'text-emerald-700' },
+  pedidos_venta:       { label: 'Ventas',               icon: '🛒', ring: 'ring-emerald-200',  bg: 'bg-emerald-50',  text: 'text-emerald-700' },
   pedidos_proveedor:   { label: 'Pedidos a Proveedor',  icon: '🏭', ring: 'ring-teal-200',     bg: 'bg-teal-50',     text: 'text-teal-700'    },
   comunicacion:        { label: 'Comunicación',         icon: '💬', ring: 'ring-purple-200',   bg: 'bg-purple-50',   text: 'text-purple-700'  },
   rrhh:                { label: 'RRHH',                 icon: '👥', ring: 'ring-pink-200',     bg: 'bg-pink-50',     text: 'text-pink-700'    },
