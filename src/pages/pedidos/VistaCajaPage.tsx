@@ -84,7 +84,7 @@ export default function VistaCajaPage() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => window.open(`/pedidos/caja-fija/${selected!.id}`, 'modoCaja', 'width=420,height=700,resizable=no,scrollbars=yes')}
+              onClick={() => window.open(`/pedidos/caja-fija/${selected!.id}`, '_blank')}
               title="Abrir en nueva pestaña modo caja"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <ExternalLink size={12} /> Modo Caja

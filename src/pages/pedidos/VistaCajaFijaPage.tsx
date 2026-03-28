@@ -64,7 +64,7 @@ export default function VistaCajaFijaPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Banner informativo */}
       <div className="bg-blue-600 text-white text-xs text-center py-2 px-4 shrink-0">
-        📌 Mantén esta ventana abierta mientras cobras en CONTPAQi
+        💡 Usa <kbd className="bg-blue-500 border border-blue-400 rounded px-1 py-0.5 font-mono text-[11px]">Ctrl+Tab</kbd> para alternar entre esta pestaña y CONTPAQi
       </div>
 
       {/* Barra superior */}
@@ -84,7 +84,7 @@ export default function VistaCajaFijaPage() {
             className="flex items-center gap-2 px-5 py-2 bg-white text-green-700 rounded-lg font-bold text-sm hover:bg-green-50 disabled:opacity-60 transition-colors shadow"
           >
             <CheckCircle2 size={16} />
-            {marking ? 'Procesando...' : '✅ Marcar como Cobrada'}
+            {marking ? 'Procesando...' : '✅ Ya cobré — Marcar como Cobrada'}
           </button>
         )}
       </div>
@@ -199,7 +199,7 @@ export default function VistaCajaFijaPage() {
             disabled={marking}
             className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-base hover:bg-green-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2 shadow-lg">
             <CheckCircle2 size={20} />
-            {marking ? 'Procesando...' : '✅ Marcar como Cobrada'}
+            {marking ? 'Procesando...' : '✅ Ya cobré — Marcar como Cobrada'}
           </button>
         )}
       </div>
