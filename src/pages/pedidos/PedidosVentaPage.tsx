@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { Nota, EstadoNota, ESTADO_LABELS, FLUJO_ESTADOS, MOCK_NOTAS } from './types'
 import { QRCodeDisplay } from '../../components/pedidos/QRCodeDisplay'
 import { imprimirNota } from '../../components/pedidos/TicketImpresion'
+import { BuscadorProductos, type ItemAgregado } from '../../components/pedidos/BuscadorProductos'
 
 // ─── Role router ─────────────────────────────────────────────────────────────
 export default function PedidosVentaPage() {
@@ -426,8 +427,6 @@ function VistaCajaInline() {
 }
 
 // ─── Modal Nueva Nota ─────────────────────────────────────────────────────────
-interface ItemForm { codigo: string; nombre: string; cantidad: number; buscando: boolean; producto_id?: string }
-
 function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d: any) => void }) {
   const user = useAuthStore(s => s.user)
   const [cliente, setCliente] = useState('')
@@ -436,7 +435,8 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
   const [notas, setNotas] = useState('')
   const [facturacion, setFacturacion] = useState(false)
   const [descuento, setDescuento] = useState(false)
-  const [items, setItems] = useState<ItemForm[]>([{ codigo: '', nombre: '', cantidad: 1, buscando: false }])
+  const [items, setItems] = useState<ItemAgregado[]>([])
+  const [showBuscador, setShowBuscador] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -457,58 +457,23 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     }, 350)
   }
 
-  const codigoTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
-
-  function buscarCodigo(idx: number, codigo: string) {
-    const upper = codigo.toUpperCase()
-    setItems(p => p.map((it, i) => i === idx ? { ...it, codigo: upper, buscando: false } : it))
-
-    clearTimeout(codigoTimers.current[idx])
-    if (upper.length < 3) return
-
-    setItems(p => p.map((it, i) => i === idx ? { ...it, buscando: true } : it))
-
-    codigoTimers.current[idx] = setTimeout(async () => {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 2000)
-      try {
-        const { data } = await api.get(`/productos?codigo=${encodeURIComponent(upper)}`, { signal: controller.signal })
-        const prod = Array.isArray(data) ? data[0] : null
-        setItems(p => p.map((it, i) => {
-          if (i !== idx) return it
-          return prod
-            ? { ...it, nombre: prod.nombre ?? prod.descripcion ?? '', producto_id: prod.id, buscando: false }
-            : { ...it, buscando: false } // sin resultados → deja nombre editable, sin producto_id
-        }))
-      } catch {
-        setItems(p => p.map((it, i) => i === idx ? { ...it, buscando: false } : it))
-      } finally {
-        clearTimeout(timeout)
-      }
-    }, 400)
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cliente.trim()) { toast.error('Ingresa el cliente'); return }
-    if (items.some(it => !it.codigo.trim())) { toast.error('Todos los productos deben tener código'); return }
-    if (items.some(it => it.buscando)) {
-      toast.error('Espera a que terminen de cargar los productos'); return
-    }
+    if (items.length === 0) { toast.error('Agrega al menos un producto'); return }
     setSubmitting(true)
     const body = {
-      nombre_cliente:    cliente,
-      notas:             notas || undefined,
+      nombre_cliente:     cliente,
+      notas:              notas || undefined,
       facturacion,
       descuento_especial: descuento,
       items: items.map(it => ({
         codigo:      it.codigo,
-        nombre:      it.nombre || it.codigo,
+        nombre:      it.nombre,
         cantidad:    it.cantidad,
-        producto_id: it.producto_id || null,
+        producto_id: it.producto_id ?? null,
       })),
     }
-    console.log('[NuevaNota] body enviado:', JSON.stringify(body))
     await onSubmit(body)
     setSubmitting(false)
   }
@@ -516,165 +481,146 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
   const inputCls = 'w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm md:p-4">
-      <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-2xl h-full md:h-auto md:max-h-[92vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">Nueva Nota de Venta</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* Número de agente */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Número de agente</label>
-            <div className="px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400">
-              {user?.numero_agente ?? <span className="italic text-gray-400">Sin número de agente</span>}
-            </div>
+    <>
+      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm md:p-4">
+        <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-2xl h-full md:h-auto md:max-h-[92vh] flex flex-col">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">Nueva Nota de Venta</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
           </div>
 
-          {/* Cliente */}
-          <div className="relative">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
-            <input className={inputCls} placeholder="Escribe para buscar..." value={cliente}
-              onChange={e => handleClienteChange(e.target.value)} autoComplete="off" required />
-            {showDropdown && clienteSugeridos.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg overflow-hidden">
-                {clienteSugeridos.map(c => (
-                  <button key={c.id} type="button"
-                    onClick={() => { setCliente(c.nombre); setShowDropdown(false) }}
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-0">
-                    <span className={c.id === 'publico' ? 'text-gray-400 italic' : 'text-gray-900 dark:text-white font-medium'}>
-                      {c.nombre}
-                    </span>
-                  </button>
-                ))}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* Número de agente */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Número de agente</label>
+              <div className="px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400">
+                {user?.numero_agente ?? <span className="italic text-gray-400">Sin número de agente</span>}
               </div>
-            )}
-          </div>
-
-          {/* Checkboxes */}
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-              <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-              Requiere factura
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-              <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-              Descuento especial
-            </label>
-          </div>
-
-          {/* Notas */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
-            <textarea className={`${inputCls} resize-none`} rows={2}
-              placeholder="Indicaciones especiales..." value={notas} onChange={e => setNotas(e.target.value)} />
-          </div>
-
-          {/* Productos */}
-          <div>
-            <div className="grid grid-cols-[100px_1fr_72px_32px] gap-2 mb-1.5 px-1">
-              <span className="text-[10px] uppercase text-gray-400 font-medium">Código</span>
-              <span className="text-[10px] uppercase text-gray-400 font-medium">Descripción</span>
-              <span className="text-[10px] uppercase text-gray-400 font-medium text-center">Cant.</span>
-              <span />
             </div>
-            <div className="space-y-2">
-              {items.map((item, i) => (
-                <div key={i} className="grid grid-cols-[100px_1fr_72px_32px] gap-2 items-center">
-                  <div className="relative">
-                    <input
-                      className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase"
-                      placeholder="COD-001"
-                      value={item.codigo}
-                      onChange={e => buscarCodigo(i, e.target.value)}
-                      required
-                    />
-                    {item.buscando && (
-                      <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Descripción"
-                    value={item.nombre}
-                    onChange={e => setItems(p => p.map((it, idx) => idx === i ? { ...it, nombre: e.target.value } : it))}
-                  />
-                  <input
-                    type="number" min={1}
-                    className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                    value={item.cantidad}
-                    onFocus={e => e.target.select()}
-                    onChange={e => setItems(p => p.map((it, idx) => idx === i ? { ...it, cantidad: Math.max(1, parseInt(e.target.value) || 1) } : it))}
-                  />
-                  {i === items.length - 1 ? (
-                    <button type="button"
-                      onClick={() => setItems(p => [...p, { codigo: '', nombre: '', cantidad: 1, buscando: false }])}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 hover:bg-blue-200 transition-colors text-lg font-bold">+</button>
-                  ) : (
-                    <button type="button"
-                      onClick={() => setItems(p => p.filter((_, idx) => idx !== i))}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 transition-colors">
-                      <X size={14} />
+
+            {/* Cliente */}
+            <div className="relative">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
+              <input className={inputCls} placeholder="Escribe para buscar..." value={cliente}
+                onChange={e => handleClienteChange(e.target.value)} autoComplete="off" required />
+              {showDropdown && clienteSugeridos.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg overflow-hidden">
+                  {clienteSugeridos.map(c => (
+                    <button key={c.id} type="button"
+                      onClick={() => { setCliente(c.nombre); setShowDropdown(false) }}
+                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-0">
+                      <span className={c.id === 'publico' ? 'text-gray-400 italic' : 'text-gray-900 dark:text-white font-medium'}>
+                        {c.nombre}
+                      </span>
                     </button>
-                  )}
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
 
-          <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose}
-              className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" disabled={submitting}
-              className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors font-semibold">
-              {submitting ? 'Creando...' : 'Crear nota'}
-            </button>
-          </div>
-        </form>
+            {/* Checkboxes */}
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+                Requiere factura
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+                Descuento especial
+              </label>
+            </div>
+
+            {/* Notas */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+              <textarea className={`${inputCls} resize-none`} rows={2}
+                placeholder="Indicaciones especiales..." value={notas} onChange={e => setNotas(e.target.value)} />
+            </div>
+
+            {/* Productos */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Productos {items.length > 0 && <span className="ml-1 text-gray-400">({items.length})</span>}
+                </span>
+                <button type="button" onClick={() => setShowBuscador(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                  <Plus size={13} /> Agregar producto
+                </button>
+              </div>
+
+              {items.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-4 border border-dashed border-gray-200 dark:border-gray-600 rounded-xl">
+                  Sin productos — usa el botón para agregar
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {items.map((it, i) => (
+                    <div key={i} className="grid grid-cols-[80px_1fr_56px_32px] gap-2 items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+                      <span className="font-mono text-xs font-bold text-blue-700 dark:text-blue-400 truncate">{it.codigo}</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{it.nombre}</span>
+                      <span className="text-xs text-center text-gray-600 dark:text-gray-400 font-medium">×{it.cantidad}</span>
+                      <button type="button" onClick={() => setItems(p => p.filter((_, idx) => idx !== i))}
+                        className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors">
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={onClose}
+                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancelar
+              </button>
+              <button type="submit" disabled={submitting}
+                className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors font-semibold">
+                {submitting ? 'Creando...' : 'Crear nota'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+
+      {showBuscador && (
+        <BuscadorProductos
+          onClose={() => setShowBuscador(false)}
+          onAdd={item => setItems(p => [...p, item])}
+        />
+      )}
+    </>
   )
 }
 
 // ─── Modal Editar Nota ────────────────────────────────────────────────────────
-type EditItem = { codigo: string; nombre: string; cantidad: number }
-
 function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () => void; onSaved: (updated: Nota) => void }) {
   const [cliente, setCliente] = useState(nota.nombre_cliente)
   const [notasVal, setNotasVal] = useState(nota.notas ?? '')
   const [facturacion, setFacturacion] = useState(nota.facturacion ?? false)
   const [descuento, setDescuento] = useState(nota.descuento_especial ?? false)
-  const [items, setItems] = useState<EditItem[]>(() => {
-    const base = (nota.items ?? []).map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad }))
-    return base.length > 0 ? base : [{ codigo: '', nombre: '', cantidad: 1 }]
-  })
+  const [items, setItems] = useState<ItemAgregado[]>(() =>
+    (nota.items ?? []).map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad }))
+  )
+  const [showBuscador, setShowBuscador] = useState(false)
   const [saving, setSaving] = useState(false)
-
-  function updateItem(i: number, patch: Partial<EditItem>) {
-    setItems(p => p.map((it, idx) => idx === i ? { ...it, ...patch } : it))
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cliente.trim()) { toast.error('El cliente es requerido'); return }
-    const filled = items.filter(it => it.codigo.trim() && it.nombre.trim())
-    if (filled.length === 0) { toast.error('Agrega al menos un producto'); return }
+    if (items.length === 0) { toast.error('Agrega al menos un producto'); return }
     setSaving(true)
     try {
       const general = { nombre_cliente: cliente, notas: notasVal || undefined, facturacion, descuento_especial: descuento }
       await api.patch(`/pedidos/venta/${nota.id}`, general)
       await api.patch(`/pedidos/venta/${nota.id}/items`, {
-        items: filled.map(it => ({ codigo: it.codigo.toUpperCase(), nombre: it.nombre, cantidad: it.cantidad }))
+        items: items.map(it => ({ codigo: it.codigo.toUpperCase(), nombre: it.nombre, cantidad: it.cantidad }))
       })
       toast.success('Nota actualizada')
-      onSaved({ ...nota, ...general, items: filled.map(it => ({ ...it, codigo: it.codigo.toUpperCase(), id: '', estado_item: 'pendiente' as any, cantidad_surtida: null })) })
+      onSaved({ ...nota, ...general, items: items.map(it => ({ ...it, codigo: it.codigo.toUpperCase(), id: '', estado_item: 'pendiente' as any, cantidad_surtida: null })) })
     } catch {
       toast.error('Error al guardar')
     } finally {
@@ -685,90 +631,86 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
   const inputCls = 'w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm md:p-4">
-      <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-2xl h-full md:h-auto md:max-h-[92vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">Editar {nota.folio}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
-            <input className={inputCls} value={cliente} onChange={e => setCliente(e.target.value)} required />
+    <>
+      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm md:p-4">
+        <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-2xl h-full md:h-auto md:max-h-[92vh] flex flex-col">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">Editar {nota.folio}</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"><X size={20} /></button>
           </div>
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-              <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-              Requiere factura
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-              <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-              Descuento especial
-            </label>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
-            <textarea className={`${inputCls} resize-none`} rows={2} value={notasVal} onChange={e => setNotasVal(e.target.value)} />
-          </div>
-
-          {/* Productos */}
-          <div>
-            <div className="grid grid-cols-[100px_1fr_72px_32px] gap-2 mb-1.5 px-1">
-              <span className="text-[10px] uppercase text-gray-400 font-medium">Código</span>
-              <span className="text-[10px] uppercase text-gray-400 font-medium">Descripción</span>
-              <span className="text-[10px] uppercase text-gray-400 font-medium text-center">Cant.</span>
-              <span />
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
+              <input className={inputCls} value={cliente} onChange={e => setCliente(e.target.value)} required />
             </div>
-            <div className="space-y-2">
-              {items.map((item, i) => (
-                <div key={i} className="grid grid-cols-[100px_1fr_72px_32px] gap-2 items-center">
-                  <input
-                    className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase"
-                    placeholder="COD-001"
-                    value={item.codigo}
-                    onChange={e => updateItem(i, { codigo: e.target.value })}
-                  />
-                  <input
-                    className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Descripción"
-                    value={item.nombre}
-                    onChange={e => updateItem(i, { nombre: e.target.value })}
-                  />
-                  <input
-                    type="number" min={1}
-                    className="w-full px-2 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-                    value={item.cantidad}
-                    onFocus={e => e.target.select()}
-                    onChange={e => updateItem(i, { cantidad: Math.max(1, parseInt(e.target.value) || 1) })}
-                  />
-                  {i === items.length - 1 ? (
-                    <button type="button"
-                      onClick={() => setItems(p => [...p, { codigo: '', nombre: '', cantidad: 1 }])}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 hover:bg-blue-200 transition-colors text-lg font-bold">+</button>
-                  ) : (
-                    <button type="button"
-                      onClick={() => setItems(p => p.filter((_, idx) => idx !== i))}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 transition-colors">
-                      <X size={14} />
-                    </button>
-                  )}
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+                Requiere factura
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+                Descuento especial
+              </label>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+              <textarea className={`${inputCls} resize-none`} rows={2} value={notasVal} onChange={e => setNotasVal(e.target.value)} />
+            </div>
+
+            {/* Productos */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Productos {items.length > 0 && <span className="ml-1 text-gray-400">({items.length})</span>}
+                </span>
+                <button type="button" onClick={() => setShowBuscador(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                  <Plus size={13} /> Agregar producto
+                </button>
+              </div>
+
+              {items.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-4 border border-dashed border-gray-200 dark:border-gray-600 rounded-xl">
+                  Sin productos — usa el botón para agregar
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {items.map((it, i) => (
+                    <div key={i} className="grid grid-cols-[80px_1fr_56px_32px] gap-2 items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg">
+                      <span className="font-mono text-xs font-bold text-blue-700 dark:text-blue-400 truncate">{it.codigo}</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{it.nombre}</span>
+                      <span className="text-xs text-center text-gray-600 dark:text-gray-400 font-medium">×{it.cantidad}</span>
+                      <button type="button" onClick={() => setItems(p => p.filter((_, idx) => idx !== i))}
+                        className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors">
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
 
-          <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose}
-              className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" disabled={saving}
-              className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors font-semibold">
-              {saving ? 'Guardando...' : 'Guardar cambios'}
-            </button>
-          </div>
-        </form>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={onClose}
+                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancelar
+              </button>
+              <button type="submit" disabled={saving}
+                className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors font-semibold">
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+
+      {showBuscador && (
+        <BuscadorProductos
+          onClose={() => setShowBuscador(false)}
+          onAdd={item => setItems(p => [...p, item])}
+        />
+      )}
+    </>
   )
 }

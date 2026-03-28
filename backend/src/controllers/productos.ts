@@ -4,7 +4,40 @@ import { z } from 'zod'
 import { AuthRequest } from '../middleware/auth'
 
 export async function listProductos(req: AuthRequest, res: Response) {
-  const { q, categoria_id, activo = 'true' } = req.query as Record<string, string>
+  const { q, search, categoria_id, codigo, activo = 'true' } = req.query as Record<string, string>
+
+  // search param: busca por código O nombre, ordena por relevancia (starts-with primero)
+  if (search) {
+    const term = search.trim()
+    const lower = term.toLowerCase()
+    const { data, error } = await supabase
+      .from('productos')
+      .select('id, codigo, nombre')
+      .eq('activo', true)
+      .or(`codigo.ilike.%${term}%,nombre.ilike.%${term}%`)
+      .limit(40)
+    if (error) return res.status(500).json({ error: 'DB_ERROR' })
+    const sorted = (data ?? []).sort((a: any, b: any) => {
+      const aStarts = a.codigo.toLowerCase().startsWith(lower) || a.nombre.toLowerCase().startsWith(lower)
+      const bStarts = b.codigo.toLowerCase().startsWith(lower) || b.nombre.toLowerCase().startsWith(lower)
+      if (aStarts && !bStarts) return -1
+      if (!aStarts && bStarts) return 1
+      return 0
+    }).slice(0, 20)
+    return res.json(sorted)
+  }
+
+  // codigo param: búsqueda exacta por código (legacy, usado internamente)
+  if (codigo) {
+    const { data, error } = await supabase
+      .from('productos')
+      .select('id, codigo, nombre, descripcion, foto_url')
+      .eq('activo', true)
+      .ilike('codigo', codigo)
+      .limit(5)
+    if (error) return res.status(500).json({ error: 'DB_ERROR' })
+    return res.json(data)
+  }
 
   let query = supabase
     .from('productos')
