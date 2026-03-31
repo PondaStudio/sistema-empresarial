@@ -3,7 +3,7 @@ import { Search, ScanLine, CheckCircle2, QrCode, DoorOpen } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { Nota, MOCK_NOTAS } from './types'
-import { EscanerCamara } from '../../components/common/EscanerCamara'
+import EscanerCamara from '../../components/common/EscanerCamara'
 
 export default function VistaChecadorPage() {
   // Todos los almacenistas nivel 9 tienen ambas funciones; piso es la vista principal

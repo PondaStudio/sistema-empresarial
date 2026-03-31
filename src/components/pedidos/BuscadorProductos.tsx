@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Search, X, ScanLine } from 'lucide-react'
 import api from '../../services/api'
-import { EscanerCamara } from '../common/EscanerCamara'
+import EscanerCamara from '../common/EscanerCamara'
 
 interface Producto { id: string; codigo: string; nombre: string }
 export interface ItemAgregado { codigo: string; nombre: string; cantidad: number; producto_id?: string }

@@ -3,7 +3,7 @@ import { Package, Save, Search, CheckCircle2, QrCode, DoorOpen } from 'lucide-re
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { Nota, ESTADO_LABELS, MOCK_NOTAS } from './types'
-import { EscanerCamara } from '../../components/common/EscanerCamara'
+import EscanerCamara from '../../components/common/EscanerCamara'
 
 const ESTADOS_ITEM = ['pendiente', 'surtido', 'no_disponible', 'surtido_parcial'] as const
 const AREAS_DEFAULT = ['A', 'B', 'C', 'D']
