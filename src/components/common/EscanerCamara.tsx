@@ -13,7 +13,11 @@ export default function EscanerCamara({ onScan, onClose, modo }: Props) {
   const divId = divIdRef.current
 
   useEffect(() => {
-    const scanner = new Html5Qrcode(divId)
+    const formatos = modo === 'qr'
+      ? [0] // QR_CODE = 0
+      : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] // todos los barcodes
+
+    const scanner = new Html5Qrcode(divId, { formatsToSupport: formatos, verbose: false })
     scannerRef.current = scanner
 
     scanner.start(
@@ -21,9 +25,6 @@ export default function EscanerCamara({ onScan, onClose, modo }: Props) {
       {
         fps: 10,
         qrbox: modo === 'qr' ? { width: 250, height: 250 } : { width: 300, height: 150 },
-        formatsToSupport: modo === 'qr'
-          ? [0] // QR_CODE = 0
-          : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], // todos los barcodes
       },
       (decodedText) => {
         onScan(decodedText)
