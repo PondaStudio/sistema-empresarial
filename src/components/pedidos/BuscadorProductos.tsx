@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, ScanLine } from 'lucide-react'
 import api from '../../services/api'
+import { EscanerCamara } from '../common/EscanerCamara'
 
 interface Producto { id: string; codigo: string; nombre: string }
 export interface ItemAgregado { codigo: string; nombre: string; cantidad: number; producto_id?: string }
@@ -21,6 +22,7 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
   const [manualMode, setManualMode] = useState(false)
   const [manualCodigo, setManualCodigo] = useState('')
   const [manualNombre, setManualNombre] = useState('')
+  const [showEscaner, setShowEscaner] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
@@ -54,9 +56,32 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
     onClose()
   }
 
+  async function handleScan(codigo: string) {
+    setShowEscaner(false)
+    const term = codigo.trim().toUpperCase()
+    setSearch(term)
+    setSelected(null)
+    setManualMode(false)
+    setLoading(true)
+    try {
+      const { data } = await api.get(`/productos?search=${encodeURIComponent(term)}`)
+      const lista: Producto[] = Array.isArray(data) ? data : []
+      setResults(lista)
+      // Si hay coincidencia exacta de código, seleccionarla directamente
+      const exacto = lista.find(p => p.codigo.toUpperCase() === term)
+      if (exacto) setSelected(exacto)
+    } catch {
+      setResults([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const showFooter = selected !== null || manualMode
 
   return (
+    <>
+    {showEscaner && <EscanerCamara modo="barcode" onScan={handleScan} onClose={() => setShowEscaner(false)} />}
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4">
       <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-lg flex flex-col" style={{ maxHeight: '80vh' }}>
         {/* Header */}
@@ -69,7 +94,8 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
 
         {/* Search input */}
         <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
-          <div className="relative">
+          <div className="flex gap-2">
+          <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               autoFocus
@@ -83,6 +109,15 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
                 <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
               </div>
             )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowEscaner(true)}
+            title="Escanear código de barras"
+            className="flex-shrink-0 flex items-center justify-center w-12 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 transition-colors"
+          >
+            <ScanLine size={18} />
+          </button>
           </div>
         </div>
 
@@ -171,5 +206,6 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
         )}
       </div>
     </div>
+    </>
   )
 }

@@ -3,7 +3,7 @@ import { Package, Save, Search, CheckCircle2, QrCode, DoorOpen } from 'lucide-re
 import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { Nota, ESTADO_LABELS, MOCK_NOTAS } from './types'
-import { QRScanner } from '../../components/pedidos/QRScanner'
+import { EscanerCamara } from '../../components/common/EscanerCamara'
 
 const ESTADOS_ITEM = ['pendiente', 'surtido', 'no_disponible', 'surtido_parcial'] as const
 const AREAS_DEFAULT = ['A', 'B', 'C', 'D']
@@ -374,7 +374,7 @@ function ModeChecarPiso() {
 
   return (
     <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
-      {showQR && <QRScanner onScan={f => { setShowQR(false); buscarPorFolio(f) }} onClose={() => setShowQR(false)} />}
+      {showQR && <EscanerCamara modo="qr" onScan={f => { setShowQR(false); buscarPorFolio(f) }} onClose={() => setShowQR(false)} />}
       {/* Lista */}
       <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2 min-h-0`}>
         <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) cobrada(s)</p>
@@ -566,7 +566,7 @@ function ModeChecarPuerta() {
 
   return (
     <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
-      {showQR && <QRScanner onScan={f => { setShowQR(false); buscarPorFolio(f) }} onClose={() => setShowQR(false)} />}
+      {showQR && <EscanerCamara modo="qr" onScan={f => { setShowQR(false); buscarPorFolio(f) }} onClose={() => setShowQR(false)} />}
       {/* Lista */}
       <div className={`${mobileShowDetail ? 'hidden' : 'flex'} md:flex flex-col w-full md:w-72 md:flex-shrink-0 gap-2 min-h-0`}>
         <p className="text-xs text-gray-500 dark:text-gray-400">{notas.length} nota(s) checada(s) en piso</p>

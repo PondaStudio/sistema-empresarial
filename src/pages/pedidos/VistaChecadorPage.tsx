@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react'
 import { Search, ScanLine, CheckCircle2, QrCode, DoorOpen } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-import { useAuthStore } from '../../store/authStore'
 import { Nota, MOCK_NOTAS } from './types'
-import { QRScanner } from '../../components/pedidos/QRScanner'
+import { EscanerCamara } from '../../components/common/EscanerCamara'
 
 export default function VistaChecadorPage() {
-  const subtipo = useAuthStore(s => s.user?.subtipo ?? 'checador_escaner')
-  if (subtipo === 'checador_rapido') return <CheckadorRapido />
+  // Todos los almacenistas nivel 9 tienen ambas funciones; piso es la vista principal
   return <CheckadorEscaner />
 }
 
@@ -133,7 +131,8 @@ function CheckadorEscaner() {
   return (
     <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {showQR && (
-        <QRScanner
+        <EscanerCamara
+          modo="qr"
           onScan={folio => { setShowQR(false); buscarPorFolio(folio) }}
           onClose={() => setShowQR(false)}
         />
@@ -407,7 +406,8 @@ function CheckadorRapido() {
   return (
     <div className="p-4 md:p-6 flex flex-col md:flex-row gap-5 h-full min-h-0">
       {showQR && (
-        <QRScanner
+        <EscanerCamara
+          modo="qr"
           onScan={folio => { setShowQR(false); buscarPorFolio(folio) }}
           onClose={() => setShowQR(false)}
         />

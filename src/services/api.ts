@@ -29,7 +29,7 @@ api.interceptors.request.use(async (config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
       const { token } = useAuthStore.getState()
       // En modo mock no redirigir; el dashboard mostrará estado vacío
@@ -38,6 +38,17 @@ api.interceptors.response.use(
         window.location.href = '/login'
       }
     }
+
+    // Reintento temporal ante errores de red (CORS preflight, timeout corto)
+    const isNetworkError = !error.response && (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED')
+    if (isNetworkError && !error.config?._retried) {
+      error.config._retried = true
+      error.config.withCredentials = false
+      try {
+        return await api.request(error.config)
+      } catch { /* propagar error original */ }
+    }
+
     return Promise.reject(error)
   }
 )
