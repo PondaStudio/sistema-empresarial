@@ -434,7 +434,7 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
   const [showDropdown, setShowDropdown] = useState(false)
   const [notas, setNotas] = useState('')
   const [facturacion, setFacturacion] = useState(false)
-  const [descuento, setDescuento] = useState(false)
+  const [descuento, setDescuento] = useState('')
   const [items, setItems] = useState<ItemAgregado[]>([])
   const [showBuscador, setShowBuscador] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -466,7 +466,7 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
       nombre_cliente:     cliente,
       notas:              notas || undefined,
       facturacion,
-      descuento_especial: descuento,
+      descuento_especial: descuento || null,
       items: items.map(it => ({
         codigo:      it.codigo,
         nombre:      it.nombre,
@@ -518,18 +518,22 @@ function NuevaNotaModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
               )}
             </div>
 
-            {/* Checkboxes */}
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+            {/* Facturación + Descuento */}
+            <div className="flex flex-wrap gap-4 items-end">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300 pt-5">
                 <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 text-blue-600" />
                 Requiere factura
               </label>
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-                <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-                Descuento especial
-              </label>
+              <div className="flex-1 min-w-[140px]">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Descuento</label>
+                <select className={inputCls} value={descuento} onChange={e => setDescuento(e.target.value)}>
+                  <option value="">Sin descuento</option>
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <option key={i + 1} value={`lista_${i + 1}`}>Lista {i + 1}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Notas */}
@@ -601,7 +605,7 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
   const [cliente, setCliente] = useState(nota.nombre_cliente)
   const [notasVal, setNotasVal] = useState(nota.notas ?? '')
   const [facturacion, setFacturacion] = useState(nota.facturacion ?? false)
-  const [descuento, setDescuento] = useState(nota.descuento_especial ?? false)
+  const [descuento, setDescuento] = useState<string>(nota.descuento_especial ?? '')
   const [items, setItems] = useState<ItemAgregado[]>(() =>
     (nota.items ?? []).map(it => ({ codigo: it.codigo, nombre: it.nombre, cantidad: it.cantidad }))
   )
@@ -614,7 +618,7 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
     if (items.length === 0) { toast.error('Agrega al menos un producto'); return }
     setSaving(true)
     try {
-      const general = { nombre_cliente: cliente, notas: notasVal || undefined, facturacion, descuento_especial: descuento }
+      const general = { nombre_cliente: cliente, notas: notasVal || undefined, facturacion, descuento_especial: descuento || null }
       await api.patch(`/pedidos/venta/${nota.id}`, general)
       await api.patch(`/pedidos/venta/${nota.id}/items`, {
         items: items.map(it => ({ codigo: it.codigo.toUpperCase(), nombre: it.nombre, cantidad: it.cantidad }))
@@ -643,15 +647,21 @@ function EditarNotaModal({ nota, onClose, onSaved }: { nota: Nota; onClose: () =
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cliente *</label>
               <input className={inputCls} value={cliente} onChange={e => setCliente(e.target.value)} required />
             </div>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-                <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+            <div className="flex flex-wrap gap-4 items-end">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300 pt-5">
+                <input type="checkbox" checked={facturacion} onChange={e => setFacturacion(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600" />
                 Requiere factura
               </label>
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-                <input type="checkbox" checked={descuento} onChange={e => setDescuento(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
-                Descuento especial
-              </label>
+              <div className="flex-1 min-w-[140px]">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Descuento</label>
+                <select className={inputCls} value={descuento} onChange={e => setDescuento(e.target.value)}>
+                  <option value="">Sin descuento</option>
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <option key={i + 1} value={`lista_${i + 1}`}>Lista {i + 1}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>

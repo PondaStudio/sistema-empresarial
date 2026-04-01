@@ -3,6 +3,7 @@ import {
   listPedidos, crearPedido, getPedido,
   confirmarItem, imprimirNota, confirmarSurtido,
   verificarVendedora, escanearChecador, cerrarPuerta,
+  updatePedido, updateItems, cobrarPedido,
 } from '../controllers/pedidosVenta'
 import { requireAuth } from '../middleware/auth'
 import { checkPermission } from '../middleware/permissions'
@@ -19,5 +20,8 @@ router.patch('/:id/surtir',             requireAuth, checkPermission('pedidos_ve
 router.patch('/:id/verificar-vendedora', requireAuth, checkPermission('pedidos_venta', 'EDITAR'), verificarVendedora)
 router.patch('/:id/checador',            requireAuth, checkPermission('pedidos_venta', 'APROBAR'), auditLog('pedidos_venta', 'APROBAR'), escanearChecador)
 router.patch('/:id/puerta',             requireAuth, checkPermission('pedidos_venta', 'APROBAR'), auditLog('pedidos_venta', 'APROBAR'), cerrarPuerta)
+router.patch('/:id',                    requireAuth, checkPermission('pedidos_venta', 'EDITAR'), auditLog('pedidos_venta', 'EDITAR'), updatePedido)
+router.patch('/:id/items',              requireAuth, checkPermission('pedidos_venta', 'EDITAR'), auditLog('pedidos_venta', 'EDITAR'), updateItems)
+router.patch('/:id/cobrar',             requireAuth, checkPermission('pedidos_venta', 'EDITAR'), auditLog('pedidos_venta', 'EDITAR'), cobrarPedido)
 
 export default router

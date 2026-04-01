@@ -24,6 +24,7 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
   const [manualNombre, setManualNombre] = useState('')
   const [showEscaner, setShowEscaner] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     clearTimeout(timerRef.current)
@@ -82,8 +83,8 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
   return (
     <>
     {showEscaner && <EscanerCamara modo="barcode" onScan={handleScan} onClose={() => setShowEscaner(false)} />}
-    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4">
-      <div className="bg-white dark:bg-gray-800 md:rounded-2xl shadow-2xl w-full md:max-w-lg flex flex-col" style={{ maxHeight: '80vh' }}>
+    <div className="fixed inset-0 z-[60] flex flex-col md:items-center md:justify-center bg-black/60 backdrop-blur-sm md:p-4">
+      <div className="bg-white dark:bg-gray-800 flex flex-col flex-1 md:flex-none md:rounded-2xl shadow-2xl w-full md:max-w-lg md:max-h-[80vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
           <h3 className="text-sm font-bold text-gray-900 dark:text-white">Agregar producto</h3>
@@ -98,11 +99,13 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
+              ref={inputRef}
               autoFocus
               className="w-full pl-9 pr-3 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Buscar por código o descripción..."
               value={search}
               onChange={e => { setSearch(e.target.value); setSelected(null); setManualMode(false) }}
+              onFocus={() => inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />
             {loading && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">

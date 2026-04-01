@@ -5,11 +5,15 @@ import { AuthRequest } from '../middleware/auth'
 
 // ── PASO 1: Vendedora crea pedido ─────────────────────────
 const crearPedidoSchema = z.object({
-  cliente_id:    z.string().uuid().optional(),
-  nombre_cliente: z.string().optional(),
-  notas:         z.string().optional(),
+  cliente_id:         z.string().uuid().optional(),
+  nombre_cliente:     z.string().optional(),
+  notas:              z.string().optional(),
+  facturacion:        z.boolean().optional(),
+  descuento_especial: z.string().nullable().optional(),
   items: z.array(z.object({
-    producto_id: z.string().uuid(),
+    producto_id: z.string().uuid().optional(),
+    codigo:      z.string().optional(),
+    nombre:      z.string().optional(),
     cantidad:    z.number().int().positive(),
   })).min(1),
 })
@@ -234,4 +238,72 @@ export async function cerrarPuerta(req: AuthRequest, res: Response) {
 
   if (error) return res.status(500).json({ error: 'UPDATE_FAILED' })
   return res.json({ message: 'Pedido cerrado definitivamente' })
+}
+
+// ── Vendedora edita datos generales ───────────────────────
+const updatePedidoSchema = z.object({
+  nombre_cliente:     z.string().optional(),
+  notas:              z.string().optional(),
+  facturacion:        z.boolean().optional(),
+  descuento_especial: z.string().nullable().optional(),
+})
+
+export async function updatePedido(req: AuthRequest, res: Response) {
+  const parsed = updatePedidoSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: 'VALIDATION_ERROR', issues: parsed.error.issues })
+
+  const { error } = await supabase
+    .from('notas_venta')
+    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .eq('id', req.params.id)
+
+  if (error) return res.status(500).json({ error: 'UPDATE_FAILED', detail: error.message })
+  return res.json({ message: 'Nota actualizada' })
+}
+
+// ── Vendedora reemplaza items de la nota ──────────────────
+const updateItemsSchema = z.object({
+  items: z.array(z.object({
+    producto_id: z.string().uuid().optional(),
+    codigo:      z.string(),
+    nombre:      z.string(),
+    cantidad:    z.number().int().positive(),
+  })).min(1),
+})
+
+export async function updateItems(req: AuthRequest, res: Response) {
+  const parsed = updateItemsSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: 'VALIDATION_ERROR', issues: parsed.error.issues })
+
+  const { error: delError } = await supabase
+    .from('items_nota_venta')
+    .delete()
+    .eq('nota_id', req.params.id)
+
+  if (delError) return res.status(500).json({ error: 'DELETE_FAILED', detail: delError.message })
+
+  const newItems = parsed.data.items.map(it => ({
+    nota_id:     req.params.id,
+    producto_id: it.producto_id ?? null,
+    codigo:      it.codigo.toUpperCase(),
+    nombre:      it.nombre,
+    cantidad:    it.cantidad,
+    estado_item: 'pendiente',
+  }))
+
+  const { error: insError } = await supabase.from('items_nota_venta').insert(newItems)
+  if (insError) return res.status(500).json({ error: 'INSERT_FAILED', detail: insError.message })
+
+  return res.json({ message: 'Items actualizados' })
+}
+
+// ── Caja marca la nota como cobrada ──────────────────────
+export async function cobrarPedido(req: AuthRequest, res: Response) {
+  const { error } = await supabase
+    .from('notas_venta')
+    .update({ estado: 'cobrada', cobrada_at: new Date().toISOString() })
+    .eq('id', req.params.id)
+
+  if (error) return res.status(500).json({ error: 'UPDATE_FAILED', detail: error.message })
+  return res.json({ message: 'Nota marcada como cobrada' })
 }
