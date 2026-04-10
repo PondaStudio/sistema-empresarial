@@ -35,7 +35,7 @@ export interface Nota {
   sucursales?: { nombre: string }
   notas?: string | null
   facturacion: boolean
-  descuento_especial: boolean
+  descuento_especial: string | null
   qr_code?: string | null
   created_at: string
   items: ItemNota[]
@@ -67,7 +67,7 @@ export const MOCK_NOTAS: Nota[] = [
     nombre_cliente: 'Refaccionaria El Pistón', vendedora_id: 'v1',
     vendedora: { nombre: 'Ana García', numero_agente: 'AGT-007' },
     sucursal_id: 's1', sucursales: { nombre: 'Norte' },
-    notas: 'Cliente frecuente, trato preferencial', facturacion: true, descuento_especial: false,
+    notas: 'Cliente frecuente, trato preferencial', facturacion: true, descuento_especial: null,
     created_at: new Date().toISOString(),
     items: [
       { id: 'i1', producto_id: 'p1', codigo: 'ACT-001', nombre: 'Aceite Motor 5W-30 1L', cantidad: 5, cantidad_surtida: 0, estado_item: 'pendiente', area: 'A-3' },
@@ -80,7 +80,7 @@ export const MOCK_NOTAS: Nota[] = [
     nombre_cliente: 'Auto Parts Norte SA', vendedora_id: 'v1',
     vendedora: { nombre: 'Ana García', numero_agente: 'AGT-007' },
     sucursal_id: 's1', sucursales: { nombre: 'Norte' },
-    notas: null, facturacion: false, descuento_especial: true,
+    notas: null, facturacion: false, descuento_especial: 'lista_1',
     created_at: new Date(Date.now() - 3600000).toISOString(),
     items: [
       { id: 'i4', producto_id: 'p4', codigo: 'FRN-007', nombre: 'Pastillas Freno Bosch', cantidad: 2, cantidad_surtida: 2, estado_item: 'surtido', area: 'D-5' },
@@ -92,7 +92,7 @@ export const MOCK_NOTAS: Nota[] = [
     nombre_cliente: 'Público en general', vendedora_id: 'v2',
     vendedora: { nombre: 'María López', numero_agente: 'AGT-012' },
     sucursal_id: 's1', sucursales: { nombre: 'Norte' },
-    notas: 'Pago con tarjeta', facturacion: false, descuento_especial: false,
+    notas: 'Pago con tarjeta', facturacion: false, descuento_especial: null,
     qr_code: 'PV-20260321-0040',
     created_at: new Date(Date.now() - 7200000).toISOString(),
     items: [
@@ -105,7 +105,7 @@ export const MOCK_NOTAS: Nota[] = [
     nombre_cliente: 'Taller Mecánico Ramos', vendedora_id: 'v2',
     vendedora: { nombre: 'María López', numero_agente: 'AGT-012' },
     sucursal_id: 's1', sucursales: { nombre: 'Norte' },
-    notas: null, facturacion: true, descuento_especial: false,
+    notas: null, facturacion: true, descuento_especial: null,
     qr_code: 'PV-20260321-0039',
     created_at: new Date(Date.now() - 86400000).toISOString(),
     items: [
