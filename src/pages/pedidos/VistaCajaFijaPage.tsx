@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Copy, CheckCircle2, CreditCard, Loader2 } from 'lucide-react'
+import { Copy, CheckCircle2, CreditCard, Loader2, Send } from 'lucide-react'
 import api from '../../services/api'
 import toast from 'react-hot-toast'
-import { Nota } from './types'
+import { Nota, ItemNota } from './types'
 import { QRCodeDisplay } from '../../components/pedidos/QRCodeDisplay'
 
 function copiar(text: string, label: string) {
@@ -19,6 +19,10 @@ export default function VistaCajaFijaPage() {
   const [loading, setLoading] = useState(true)
   const [marking, setMarking] = useState(false)
   const [cobrada, setCobrada] = useState(false)
+  const [contpaqiStatus, setContpaqiStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [contpaqiError, setContpaqiError] = useState('')
+  const [countdown, setCountdown] = useState(0)
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -27,6 +31,54 @@ export default function VistaCajaFijaPage() {
       .catch(() => toast.error('No se pudo cargar la nota'))
       .finally(() => setLoading(false))
   }, [id])
+
+  function buildContpaqiPayload(items: ItemNota[]) {
+    return items
+      .filter(item => item.codigo && item.cantidad)
+      .map(item => `${item.codigo}|${item.cantidad}`)
+      .join('\n')
+  }
+
+  async function sendToContpaqi(items: ItemNota[]) {
+    const payload = buildContpaqiPayload(items)
+    const response = await fetch('http://127.0.0.1:8765/send-to-contpaqi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: payload })
+    })
+    if (!response.ok) throw new Error(await response.text())
+    return response.json()
+  }
+
+  function handleEnviarContpaqi() {
+    const items = nota?.items ?? []
+    if (!items.length) return
+    setContpaqiStatus('sending')
+    setContpaqiError('')
+    setCountdown(30)
+
+    let remaining = 30
+    countdownTimer.current = setInterval(() => {
+      remaining -= 1
+      setCountdown(remaining)
+      if (remaining <= 0) {
+        clearInterval(countdownTimer.current!)
+        sendToContpaqi(items)
+          .then(() => setContpaqiStatus('success'))
+          .catch((err: Error) => {
+            const msg = err.message || ''
+            if (msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('err_connection_refused') || msg.toLowerCase().includes('networkerror')) {
+              setContpaqiError('⚠️ Helper local no encontrado. ¿Está corriendo el servidor local?')
+            } else if (msg.toLowerCase().includes('contpaqi') || msg.toLowerCase().includes('no está abierto')) {
+              setContpaqiError('⚠️ CONTPAQi no está abierto')
+            } else {
+              setContpaqiError(`⚠️ ${msg || 'Error desconocido'}`)
+            }
+            setContpaqiStatus('error')
+          })
+      }
+    }, 1000)
+  }
 
   async function marcarCobrada() {
     if (!nota) return
@@ -191,6 +243,53 @@ export default function VistaCajaFijaPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Botón Enviar a CONTPAQi */}
+        {(nota.items ?? []).length > 0 && (
+          <div className="space-y-2">
+            {contpaqiStatus === 'idle' && (
+              <button
+                onClick={handleEnviarContpaqi}
+                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow">
+                <Send size={16} /> Enviar a CONTPAQi
+              </button>
+            )}
+            {contpaqiStatus === 'sending' && (
+              <div className="w-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
+                  <Loader2 size={16} className="animate-spin" />
+                  Preparando envío... Tienes {countdown} segundos para ir a CONTPAQi
+                </div>
+                <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                  ⏱️ Enviando en {countdown} segundos... Ve a CONTPAQi y haz clic en el campo Producto
+                </p>
+                <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-1.5">
+                  <div
+                    className="bg-indigo-600 h-1.5 rounded-full transition-all duration-1000"
+                    style={{ width: `${(countdown / 30) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            {contpaqiStatus === 'success' && (
+              <div className="w-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-3 text-center text-green-700 dark:text-green-300 font-semibold text-sm">
+                ✅ Productos enviados a CONTPAQi
+              </div>
+            )}
+            {contpaqiStatus === 'error' && (
+              <div className="w-full space-y-2">
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3 text-amber-700 dark:text-amber-300 text-sm">
+                  {contpaqiError}
+                </div>
+                <button
+                  onClick={handleEnviarContpaqi}
+                  className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                  <Send size={15} /> Reintentar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Botón cobrar al final para mobile */}
         {!cobrada && (
