@@ -25,6 +25,16 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
   const [showEscaner, setShowEscaner] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const inputRef = useRef<HTMLInputElement>(null)
+  const cantidadRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (selected) {
+      setTimeout(() => {
+        cantidadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        cantidadRef.current?.focus()
+      }, 300)
+    }
+  }, [selected])
 
   useEffect(() => {
     clearTimeout(timerRef.current)
@@ -180,7 +190,7 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
 
         {/* Footer: cantidad + añadir */}
         {showFooter && (
-          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 flex-shrink-0">
+          <div className="sticky bottom-0 px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 flex-shrink-0 bg-white dark:bg-gray-800">
             <div className="flex-1 min-w-0">
               {selected && (
                 <p className="text-xs text-gray-600 dark:text-gray-300 truncate">
@@ -191,6 +201,7 @@ export function BuscadorProductos({ onClose, onAdd }: Props) {
               {manualMode && <p className="text-xs font-mono text-gray-600 dark:text-gray-300">{manualCodigo || '—'}</p>}
             </div>
             <input
+              ref={cantidadRef}
               type="number"
               min={1}
               value={cantidad}
