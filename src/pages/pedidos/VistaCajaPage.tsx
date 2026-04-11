@@ -55,7 +55,7 @@ export default function VistaCajaPage() {
   function buildContpaqiPayload(items: ItemNota[]) {
     return items
       .filter(item => item.codigo && item.cantidad)
-      .map(item => `${item.codigo}|${item.cantidad}`)
+      .map(item => `${item.nombre}|${item.cantidad}`)
       .join('\n')
   }
 
