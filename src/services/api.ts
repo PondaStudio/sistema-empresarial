@@ -15,11 +15,14 @@ api.interceptors.request.use(async (config) => {
   } else {
     // Modo mock: construir token con nivel embebido
     const { token, user } = useAuthStore.getState()
-    if (token?.startsWith('mock-')) {
+    if (user?.id && user?.roles?.nivel) {
+      const nivel = user.roles.nivel
+      const uid = user.id
+      config.headers.Authorization = `Bearer mock-token-nivel-${nivel}-uid-${uid}`
+    } else if (token?.startsWith('mock-')) {
       const nivel = user?.roles?.nivel ?? 99
       const uid = user?.id ?? 'mock-user'
-      const mockToken = `mock-token-nivel-${nivel}-uid-${uid}`
-      config.headers.Authorization = `Bearer ${mockToken}`
+      config.headers.Authorization = `Bearer mock-token-nivel-${nivel}-uid-${uid}`
     } else if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
