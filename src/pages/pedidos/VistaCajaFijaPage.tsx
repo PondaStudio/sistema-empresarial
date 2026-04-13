@@ -55,9 +55,9 @@ export default function VistaCajaFijaPage() {
     if (!items.length) return
     setContpaqiStatus('sending')
     setContpaqiError('')
-    setCountdown(30)
+    setCountdown(20)
 
-    let remaining = 30
+    let remaining = 20
     countdownTimer.current = setInterval(() => {
       remaining -= 1
       setCountdown(remaining)
@@ -266,7 +266,7 @@ export default function VistaCajaFijaPage() {
                 <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-1.5">
                   <div
                     className="bg-indigo-600 h-1.5 rounded-full transition-all duration-1000"
-                    style={{ width: `${(countdown / 30) * 100}%` }}
+                    style={{ width: `${(countdown / 20) * 100}%` }}
                   />
                 </div>
               </div>
