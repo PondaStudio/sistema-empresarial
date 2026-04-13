@@ -2,6 +2,7 @@ export type EstadoNota =
   | 'capturada'
   | 'en_surtido'
   | 'surtido_parcial'
+  | 'devuelta_vendedora'
   | 'completa_en_piso'
   | 'lista_para_cobro'
   | 'cobrada'
@@ -45,6 +46,7 @@ export const ESTADO_LABELS: Record<EstadoNota | string, { label: string; color: 
   capturada:           { label: 'Capturada',          color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',         step: 1 },
   en_surtido:          { label: 'En surtido',         color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400', step: 2 },
   surtido_parcial:     { label: 'Surtido parcial',    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400', step: 3 },
+  devuelta_vendedora:  { label: '⚠️ Faltantes',       color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',            step: 3 },
   completa_en_piso:    { label: 'Completa en piso',   color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',        step: 4 },
   lista_para_cobro:    { label: 'Lista para cobro',   color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400', step: 5 },
   cobrada:             { label: 'Cobrada',             color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',         step: 6 },

@@ -114,6 +114,13 @@ function ListaNotas({
   )
 }
 
+function badgeItemEstado(estadoItem: string | null | undefined, cantSurtida: number | null | undefined, cantPedida: number) {
+  const surtida = cantSurtida ?? 0
+  if (estadoItem === 'surtido' || surtida >= cantPedida)      return { code: 'S',  label: 'Surtido',          color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
+  if (estadoItem === 'surtido_parcial' || surtida > 0)        return { code: 'SP', label: 'Surtido parcial',  color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }
+  return                                                              { code: 'NS', label: 'No surtido',       color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }
+}
+
 // ─── Detalle de nota ──────────────────────────────────────────────────────────
 function DetalleNota({ nota, onEstadoChange, onDelete, onEdited }: {
   nota: Nota
@@ -170,6 +177,18 @@ function DetalleNota({ nota, onEstadoChange, onDelete, onEdited }: {
 
         {/* Acciones */}
         <div className="flex flex-wrap gap-2">
+          {nota.estado === 'devuelta_vendedora' && (
+            <>
+              <button onClick={() => avanzar('confirmar-faltantes', 'lista_para_cobro', 'Surtido parcial aceptado')}
+                className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5">
+                <CheckCircle2 size={14} /> Confirmar y continuar
+              </button>
+              <button onClick={() => avanzar('reenviar-almacen', 'en_surtido', 'Nota enviada de vuelta al almacén')}
+                className="px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-1.5">
+                ↩ Enviar de vuelta a almacén
+              </button>
+            </>
+          )}
           {nota.estado === 'completa_en_piso' && nivel >= 10 && (
             <button onClick={() => avanzar('validar-piso', 'lista_para_cobro', 'Validado en piso')}
               className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1.5">
@@ -249,6 +268,17 @@ function DetalleNota({ nota, onEstadoChange, onDelete, onEdited }: {
         </div>
       </div>
 
+      {/* Banner faltantes */}
+      {nota.estado === 'devuelta_vendedora' && (
+        <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm text-red-700 dark:text-red-400">
+          <span className="text-lg leading-none">⚠️</span>
+          <div>
+            <p className="font-semibold">Nota devuelta por faltantes</p>
+            <p className="text-xs mt-0.5 text-red-500 dark:text-red-400">El almacén no pudo surtir todos los productos. Revisa los estados y decide cómo continuar.</p>
+          </div>
+        </div>
+      )}
+
       {/* Tabla de items */}
       <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700">
         <table className="w-full text-sm">
@@ -258,28 +288,26 @@ function DetalleNota({ nota, onEstadoChange, onDelete, onEdited }: {
               <th className="px-3 py-2 text-left">Descripción</th>
               <th className="px-3 py-2 text-center w-16">Cant.</th>
               <th className="px-3 py-2 text-center w-20">Surtido</th>
-              <th className="px-3 py-2 text-center w-24">Estado</th>
+              <th className="px-3 py-2 text-center w-16">Est.</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {(nota.items ?? []).map(item => (
-              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                <td className="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
-                <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.nombre}</td>
-                <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300 font-medium">{item.cantidad}</td>
-                <td className="px-3 py-2 text-center text-gray-500 dark:text-gray-400">{item.cantidad_surtida ?? '—'}</td>
-                <td className="px-3 py-2 text-center">
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                    item.estado_item === 'surtido'        ? 'bg-green-100 text-green-700' :
-                    item.estado_item === 'no_encontrado'  ? 'bg-red-100 text-red-700' :
-                    item.estado_item === 'surtido_parcial'? 'bg-orange-100 text-orange-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {item.estado_item}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {(nota.items ?? []).map(item => {
+              const badge = badgeItemEstado(item.estado_item, item.cantidad_surtida, item.cantidad)
+              return (
+                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <td className="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
+                  <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.nombre}</td>
+                  <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300 font-medium">{item.cantidad}</td>
+                  <td className="px-3 py-2 text-center text-gray-500 dark:text-gray-400">{item.cantidad_surtida ?? '—'}</td>
+                  <td className="px-3 py-2 text-center">
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badge.color}`}>
+                      {badge.code}
+                    </span>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

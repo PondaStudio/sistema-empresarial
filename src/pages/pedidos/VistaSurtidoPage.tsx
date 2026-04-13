@@ -5,8 +5,19 @@ import toast from 'react-hot-toast'
 import { Nota, ESTADO_LABELS, MOCK_NOTAS } from './types'
 import EscanerCamara from '../../components/common/EscanerCamara'
 
-const ESTADOS_ITEM = ['pendiente', 'surtido', 'no_disponible', 'surtido_parcial'] as const
 const AREAS_DEFAULT = ['A', 'B', 'C', 'D']
+
+function badgeItem(surtida: number, pedida: number) {
+  if (surtida >= pedida) return { code: 'S',  color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
+  if (surtida > 0)       return { code: 'SP', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }
+  return                        { code: 'NS', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }
+}
+
+function estadoItemFromBadge(surtida: number, pedida: number): string {
+  if (surtida >= pedida) return 'surtido'
+  if (surtida > 0)       return 'surtido_parcial'
+  return 'no_disponible'
+}
 
 type Modo = 'surtir' | 'checar_piso' | 'checar_puerta'
 
@@ -77,7 +88,7 @@ function ModeSurtir() {
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
-  const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; estado: string; area: string }>>({})
+  const [surtidoLocal, setSurtidoLocal] = useState<Record<string, { cantidad: number; area: string }>>({})
   const [areas, setAreas] = useState<string[]>(AREAS_DEFAULT)
   const [mobileShowDetail, setMobileShowDetail] = useState(false)
 
@@ -102,9 +113,10 @@ function ModeSurtir() {
     try {
       const { data } = await api.get(`/pedidos/venta/${nota.id}`)
       const detalle: Nota = data
-      const init: Record<string, { cantidad: number; estado: string; area: string }> = {}
+      const init: Record<string, { cantidad: number; area: string }> = {}
       ;(detalle.items ?? []).forEach(it => {
-        init[it.id] = { cantidad: it.cantidad_surtida ?? 0, estado: it.estado_item ?? 'pendiente', area: it.area ?? '' }
+        // Iniciar con la cantidad pedida; el almacenista solo modifica si hay faltantes
+        init[it.id] = { cantidad: it.cantidad, area: it.area ?? '' }
       })
       setSurtidoLocal(init)
       setSelected(detalle)
@@ -119,14 +131,19 @@ function ModeSurtir() {
   async function guardarSurtido() {
     if (!selected) return
     setSaving(true)
-    const items = (selected.items ?? []).map(it => ({
-      id: it.id,
-      cantidad_surtida: surtidoLocal[it.id]?.cantidad ?? 0,
-      estado_confirmacion: surtidoLocal[it.id]?.estado ?? it.estado_item ?? 'pendiente',
-    }))
+
+    const items = (selected.items ?? []).map(it => {
+      const loc = surtidoLocal[it.id] ?? { cantidad: it.cantidad, area: it.area ?? '' }
+      return {
+        id:                  it.id,
+        cantidad_surtida:    loc.cantidad,
+        estado_confirmacion: estadoItemFromBadge(loc.cantidad, it.cantidad),
+        area:                loc.area || undefined,
+      }
+    })
+
     const allSurtido = items.every(i => i.estado_confirmacion === 'surtido')
-    const noneFound  = items.every(i => i.estado_confirmacion === 'no_disponible')
-    const nuevoEstado = allSurtido ? 'completa_en_piso' : noneFound ? 'con_incidencia' : 'surtido_parcial'
+    const nuevoEstado = allSurtido ? 'completa_en_piso' : 'devuelta_vendedora'
 
     let errorOcurrido = false
     for (const it of items) {
@@ -134,15 +151,24 @@ function ModeSurtir() {
         await api.patch(`/pedidos/venta/${selected.id}/surtir-item/${it.id}`, {
           cantidad_surtida:    it.cantidad_surtida,
           estado_confirmacion: it.estado_confirmacion,
-          area:                surtidoLocal[it.id]?.area || undefined,
+          area:                it.area,
         })
       } catch (err: any) {
         console.error('[guardarSurtido] error en item', it.id, err?.response?.data ?? err?.message)
         errorOcurrido = true
       }
     }
+
+    // Actualizar estado de la nota
+    try {
+      await api.patch(`/pedidos/venta/${selected.id}/estado`, { estado: nuevoEstado })
+    } catch (err: any) {
+      console.error('[guardarSurtido] error actualizando estado nota', err?.response?.data ?? err?.message)
+    }
+
     if (errorOcurrido) toast.error('Algunos items no se pudieron guardar')
-    else toast.success('Surtido guardado')
+    else if (nuevoEstado === 'devuelta_vendedora') toast('Nota devuelta a vendedora por faltantes', { icon: '⚠️' })
+    else toast.success('Surtido completo — nota lista en piso')
 
     setNotas(prev => prev.map(n => n.id === selected.id
       ? { ...n, estado: nuevoEstado as any }
@@ -150,6 +176,7 @@ function ModeSurtir() {
     ))
     setSaving(false)
     setSelected(null)
+    setMobileShowDetail(false)
   }
 
   const notasFiltradas = notas.filter(n =>
@@ -241,12 +268,13 @@ function ModeSurtir() {
                     <th className="px-3 py-2 text-center w-16">Pedido</th>
                     <th className="px-3 py-2 text-center w-20">Surtido</th>
                     <th className="px-3 py-2 text-center w-24">Área</th>
-                    <th className="px-3 py-2 text-center w-36">Estado</th>
+                    <th className="px-3 py-2 text-center w-16">Est.</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {(selected.items ?? []).map(item => {
-                    const loc = surtidoLocal[item.id] ?? { cantidad: item.cantidad_surtida ?? 0, estado: item.estado_item ?? 'pendiente', area: item.area ?? '' }
+                    const loc = surtidoLocal[item.id] ?? { cantidad: item.cantidad, area: item.area ?? '' }
+                    const badge = badgeItem(loc.cantidad, item.cantidad)
                     return (
                       <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                         <td className="px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
@@ -268,11 +296,9 @@ function ModeSurtir() {
                           </select>
                         </td>
                         <td className="px-3 py-2 text-center">
-                          <select value={loc.estado}
-                            onChange={e => setSurtidoLocal(prev => ({ ...prev, [item.id]: { ...loc, estado: e.target.value } }))}
-                            className="text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            {ESTADOS_ITEM.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                          <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full ${badge.color}`}>
+                            {badge.code}
+                          </span>
                         </td>
                       </tr>
                     )
