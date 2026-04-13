@@ -75,9 +75,9 @@ export default function VistaCajaPage() {
     if (!items.length) return
     setContpaqiStatus('sending')
     setContpaqiError('')
-    setCountdown(20)
+    setCountdown(10)
 
-    let remaining = 20
+    let remaining = 10
     countdownTimer.current = setInterval(() => {
       remaining -= 1
       setCountdown(remaining)
@@ -246,7 +246,7 @@ export default function VistaCajaPage() {
             <div className="w-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 rounded-xl p-3 space-y-2">
               <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-semibold text-xs">
                 <Loader2 size={14} className="animate-spin" />
-                Preparando envío... Tienes {countdown} segundos para ir a CONTPAQi
+                ⏱️ Preparando envío... Tienes 10 segundos para ir a CONTPAQi
               </div>
               <p className="text-xs text-indigo-600 dark:text-indigo-400">
                 ⏱️ Enviando en {countdown} segundos... Ve a CONTPAQi y haz clic en el campo Producto
@@ -254,7 +254,7 @@ export default function VistaCajaPage() {
               <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-1.5">
                 <div
                   className="bg-indigo-600 h-1.5 rounded-full transition-all duration-1000"
-                  style={{ width: `${(countdown / 20) * 100}%` }}
+                  style={{ width: `${(countdown / 10) * 100}%` }}
                 />
               </div>
             </div>
