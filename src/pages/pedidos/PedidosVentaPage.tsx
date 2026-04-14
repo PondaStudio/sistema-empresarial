@@ -495,6 +495,14 @@ function VistaVendedora() {
   }
 
   function handleEstadoChange(id: string, estado: EstadoNota) {
+    // Si la nota estaba en devuelta_vendedora y ya fue resuelta, quitarla de la lista
+    const notaActual = notas.find(n => n.id === id)
+    if (notaActual?.estado === 'devuelta_vendedora') {
+      setNotas(prev => prev.filter(n => n.id !== id))
+      setSelected(null)
+      setMobileShowDetail(false)
+      return
+    }
     setNotas(prev => prev.map(n => n.id === id ? { ...n, estado, qr_code: estado === 'lista_para_cobro' ? n.folio : n.qr_code } : n))
     setSelected(prev => prev?.id === id ? { ...prev, estado, qr_code: estado === 'lista_para_cobro' ? prev.folio : prev.qr_code } : prev)
   }
