@@ -143,6 +143,8 @@ function FaltantesEditor({ nota, onEstadoChange }: {
 
   async function confirmar() {
     setSaving(true)
+    console.log('[confirmar] nota.id:', nota.id)
+    console.log('[confirmar] URL:', `/pedidos/venta/${nota.id}/confirmar-surtido-parcial`)
     const activosPayload = itemsLocal
       .filter(it => !it.eliminado)
       .map(it => ({ id: it.id, cantidad: it.cantidadNueva }))
@@ -155,8 +157,10 @@ function FaltantesEditor({ nota, onEstadoChange }: {
           eliminar: eliminadosPayload,
         })
       }
-      await api.patch(`/pedidos/venta/${nota.id}/confirmar-surtido-parcial`, { accion: 're_surtir' })
+      const response = await api.patch(`/pedidos/venta/${nota.id}/confirmar-surtido-parcial`, { accion: 're_surtir' })
+      console.log('[confirmar] response:', response.data)
     } catch (err: any) {
+      console.error('[confirmar] error:', err?.response?.data)
       console.warn('[FaltantesEditor] error en API, continuando optimista', err?.response?.data ?? err?.message)
     }
 
