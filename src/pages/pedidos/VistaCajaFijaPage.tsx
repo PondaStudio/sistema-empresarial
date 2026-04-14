@@ -55,9 +55,9 @@ export default function VistaCajaFijaPage() {
     if (!items.length) return
     setContpaqiStatus('sending')
     setContpaqiError('')
-    setCountdown(5)
+    setCountdown(3)
 
-    let remaining = 5
+    let remaining = 3
     countdownTimer.current = setInterval(() => {
       remaining -= 1
       setCountdown(remaining)
@@ -258,15 +258,15 @@ export default function VistaCajaFijaPage() {
               <div className="w-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 rounded-xl p-4 space-y-2">
                 <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
                   <Loader2 size={16} className="animate-spin" />
-                  ⏱️ Enviando en 5 segundos... Ve a CONTPAQi
+                  ⏱️ Enviando en 3 segundos...
                 </div>
                 <p className="text-xs text-indigo-600 dark:text-indigo-400">
-                  ⏱️ Enviando en {countdown} segundos... Ve a CONTPAQi
+                  ⏱️ Enviando en {countdown} segundos...
                 </p>
                 <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-1.5">
                   <div
                     className="bg-indigo-600 h-1.5 rounded-full transition-all duration-1000"
-                    style={{ width: `${(countdown / 5) * 100}%` }}
+                    style={{ width: `${(countdown / 3) * 100}%` }}
                   />
                 </div>
               </div>
