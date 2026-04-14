@@ -271,14 +271,16 @@ function FaltantesEditor({ nota, onEstadoChange }: {
       </div>
 
       {/* Botones */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         <button onClick={() => confirmar('aceptar')} disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors font-medium">
-          <CheckCircle2 size={14} /> Aceptar lo surtido y continuar
+          className="flex flex-col items-start px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 transition-colors">
+          <span className="flex items-center gap-1.5 font-medium"><CheckCircle2 size={14} /> Aceptar faltantes y enviar a almacén</span>
+          <span className="text-[11px] text-green-100 mt-0.5">El almacenista confirmará el surtido final</span>
         </button>
         <button onClick={() => confirmar('re_surtir')} disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-60 transition-colors font-medium">
-          🔄 Enviar de vuelta a almacén
+          className="flex flex-col items-start px-4 py-2.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-60 transition-colors">
+          <span className="flex items-center gap-1.5 font-medium">🔄 Pedir re-surtido completo</span>
+          <span className="text-[11px] text-amber-100 mt-0.5">El almacenista volverá a surtir los productos faltantes</span>
         </button>
       </div>
     </div>

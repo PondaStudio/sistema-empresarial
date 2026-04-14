@@ -168,7 +168,7 @@ function ModeSurtir() {
 
     if (errorOcurrido) toast.error('Algunos items no se pudieron guardar')
     else if (nuevoEstado === 'devuelta_vendedora') toast('Nota devuelta a vendedora por faltantes', { icon: '⚠️' })
-    else toast.success('Surtido completo — nota lista en piso')
+    else toast.success('✅ Surtido completo — nota lista para validación en piso')
 
     setNotas(prev => prev.map(n => n.id === selected.id
       ? { ...n, estado: nuevoEstado as any }
