@@ -79,3 +79,13 @@ export async function updateProducto(req: AuthRequest, res: Response) {
   if (error) return res.status(500).json({ error: 'UPDATE_FAILED' })
   return res.json({ message: 'Producto actualizado' })
 }
+
+export async function getExtraTabCodes(req: AuthRequest, res: Response) {
+  const { data, error } = await supabase
+    .from('productos')
+    .select('codigo')
+    .eq('activo', true)
+    .eq('extra_tab', true)
+  if (error) return res.status(500).json({ error: 'DB_ERROR' })
+  return res.json((data ?? []).map((p: any) => p.codigo))
+}

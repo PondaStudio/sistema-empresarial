@@ -17,6 +17,7 @@ export default function VistaCajaFijaPage() {
   const { id } = useParams<{ id: string }>()
   const [nota, setNota] = useState<Nota | null>(null)
   const [loading, setLoading] = useState(true)
+  const [extraTabCodes, setExtraTabCodes] = useState<Set<string>>(new Set())
   const [marking, setMarking] = useState(false)
   const [cobrada, setCobrada] = useState(false)
   const [contpaqiStatus, setContpaqiStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
@@ -26,8 +27,14 @@ export default function VistaCajaFijaPage() {
 
   useEffect(() => {
     if (!id) return
-    api.get(`/pedidos/venta/${id}`)
-      .then(r => setNota(r.data))
+    Promise.all([
+      api.get(`/pedidos/venta/${id}`),
+      api.get('/productos/extra-tab-codes'),
+    ])
+      .then(([notaRes, codesRes]) => {
+        setNota(notaRes.data)
+        setExtraTabCodes(new Set(codesRes.data as string[]))
+      })
       .catch(() => toast.error('No se pudo cargar la nota'))
       .finally(() => setLoading(false))
   }, [id])
@@ -203,46 +210,87 @@ export default function VistaCajaFijaPage() {
         </div>
 
         {/* Lista de productos */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-              Productos ({(nota.items ?? []).length})
-            </h2>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500">
-              <tr>
-                <th className="px-3 py-2 text-left w-24">Código</th>
-                <th className="px-3 py-2 text-left">Descripción</th>
-                <th className="px-3 py-2 text-center w-12">Cant.</th>
-                <th className="px-3 py-2 text-center w-32">Copiar</th>
+        {(() => {
+          const allItems = nota.items ?? []
+          const itemsEspeciales = allItems.filter(i => extraTabCodes.has(i.codigo))
+          const itemsNormales = allItems.filter(i => !extraTabCodes.has(i.codigo))
+          const hayEspeciales = itemsEspeciales.length > 0
+
+          function renderRows(items: ItemNota[]) {
+            return items.map(item => (
+              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td className="px-3 py-2.5 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
+                <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200">{item.nombre}</td>
+                <td className="px-3 py-2.5 text-center font-semibold text-gray-700 dark:text-gray-300">{item.cantidad}</td>
+                <td className="px-3 py-2.5">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      onClick={() => copiar(item.codigo, item.codigo)}
+                      className="flex items-center gap-0.5 px-2 py-1 text-[10px] rounded border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 dark:hover:bg-blue-900/20 transition-colors">
+                      <Copy size={10} /> Código
+                    </button>
+                    <button
+                      onClick={() => copiar(item.nombre, item.nombre)}
+                      className="flex items-center gap-0.5 px-2 py-1 text-[10px] rounded border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-green-50 hover:text-green-600 hover:border-green-300 dark:hover:bg-green-900/20 transition-colors">
+                      <Copy size={10} /> Desc.
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {(nota.items ?? []).map(item => (
-                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-3 py-2.5 font-mono text-xs text-gray-600 dark:text-gray-400">{item.codigo}</td>
-                  <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200">{item.nombre}</td>
-                  <td className="px-3 py-2.5 text-center font-semibold text-gray-700 dark:text-gray-300">{item.cantidad}</td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => copiar(item.codigo, item.codigo)}
-                        className="flex items-center gap-0.5 px-2 py-1 text-[10px] rounded border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 dark:hover:bg-blue-900/20 transition-colors">
-                        <Copy size={10} /> Código
-                      </button>
-                      <button
-                        onClick={() => copiar(item.nombre, item.nombre)}
-                        className="flex items-center gap-0.5 px-2 py-1 text-[10px] rounded border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-green-50 hover:text-green-600 hover:border-green-300 dark:hover:bg-green-900/20 transition-colors">
-                        <Copy size={10} /> Desc.
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))
+          }
+
+          return (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Productos ({allItems.length})
+                </h2>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500">
+                  <tr>
+                    <th className="px-3 py-2 text-left w-24">Código</th>
+                    <th className="px-3 py-2 text-left">Descripción</th>
+                    <th className="px-3 py-2 text-center w-12">Cant.</th>
+                    <th className="px-3 py-2 text-center w-32">Copiar</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {hayEspeciales ? (
+                    <>
+                      <tr>
+                        <td colSpan={4} className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-700">
+                          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                            ⚠️ Ingresar primero
+                            <span className="bg-amber-200 dark:bg-amber-700 text-amber-800 dark:text-amber-200 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                              {itemsEspeciales.length}
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                      {renderRows(itemsEspeciales)}
+                      {itemsNormales.length > 0 && (
+                        <>
+                          <tr>
+                            <td colSpan={4} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                Productos normales
+                              </span>
+                            </td>
+                          </tr>
+                          {renderRows(itemsNormales)}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    renderRows(allItems)
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )
+        })()}
 
         {/* Botón Enviar a CONTPAQi */}
         {(nota.items ?? []).length > 0 && (
